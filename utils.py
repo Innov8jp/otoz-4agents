@@ -1,4 +1,4 @@
-# utils.py
+# utils.py (Corrected and Complete Version)
 
 import streamlit as st
 import pandas as pd
@@ -11,10 +11,17 @@ import json # For reading the intents file
 import re # For finding numbers in user input
 from difflib import get_close_matches # For intelligent pattern matching
 
-# NOTE: PDF Generation is disabled. We can add a reliable version back later.
+# NOTE: PDF Generation is disabled.
 ENABLE_PDF_INVOICING = False
 
-### NEW: Function to load your training data ###
+### NEW HELPER CLASS ###
+# This small class is crucial for safely formatting the bot's responses.
+# If a placeholder like {price} exists but we don't have a value for it,
+# this prevents the app from crashing.
+class default_map(dict):
+    def __missing__(self, key):
+        return f'{{{key}}}'
+
 @st.cache_data
 def load_intents(file_path: str):
     """Loads the intents from the specified JSON file."""
@@ -28,9 +35,9 @@ def load_intents(file_path: str):
         st.error(f"Error decoding the JSON from {file_path}. Please check for syntax errors in the file.")
         return None
 
-# --- DATA LOADING ---
 @st.cache_data
 def load_inventory():
+    """Loads inventory from CSV, or generates a sample DataFrame."""
     try:
         df = None
         if os.path.exists(INVENTORY_FILE_PATH):
@@ -70,7 +77,6 @@ def load_inventory():
     except Exception as e:
         logging.error(f"FATAL: Error during inventory loading: {e}"); st.error(f"A fatal error occurred while preparing inventory data: {e}"); return pd.DataFrame()
 
-# --- HELPER FUNCTIONS ---
 def calculate_total_price(base_price, option):
     breakdown = {'base_price': base_price, 'domestic_transport': 0, 'freight_cost': 0, 'insurance': 0}
     if option in ["FOB", "C&F", "CIF"]: breakdown['domestic_transport'] = DOMESTIC_TRANSPORT
@@ -87,18 +93,15 @@ def get_bot_response(user_input: str):
     if not intents_data:
         return "Error: Could not load training data. Please check the `intents_extended_50.json` file."
 
-    lowered_input = user_input.lower()
-    
     # --- Step 1: Create a mapping of all patterns to their intent tag ---
-    pattern_to_tag = {}
-    for intent in intents_data['intents']:
-        for pattern in intent['patterns']:
-            pattern_to_tag[pattern.lower()] = intent['tag']
-
+    pattern_to_tag = {pattern.lower(): intent['tag'] 
+                      for intent in intents_data['intents'] 
+                      for pattern in intent['patterns']}
+    
     all_patterns = list(pattern_to_tag.keys())
     
     # --- Step 2: Find the best matching pattern for the user's input ---
-    matches = get_close_matches(lowered_input, all_patterns, n=1, cutoff=0.6)
+    matches = get_close_matches(user_input.lower(), all_patterns, n=1, cutoff=0.6)
     
     best_match_tag = None
     if matches:
@@ -118,11 +121,9 @@ def get_bot_response(user_input: str):
         car_details = st.session_state.get('car_in_chat', {})
         price_breakdown = calculate_total_price(car_details.get('price', 0), st.session_state.get('shipping_option', 'FOB'))
         
-        # Look for a number in the user input to fill in offer amount
         offer_match = re.search(r'(\d[\d,.]*)', user_input)
         offer_amount = offer_match.group(1) if offer_match else "[your offer]"
 
-        # A dictionary to safely fill placeholders
         format_map = {
             "price": f"¥{int(car_details.get('price', 0)):,}",
             "total_price": f"¥{int(price_breakdown['total_price']):,}",
@@ -131,12 +132,6 @@ def get_bot_response(user_input: str):
             "port": st.session_state.get('customer_info', {}).get('port_of_discharge', 'your selected port'),
             "country": st.session_state.get('customer_info', {}).get('country', 'your country')
         }
-        # Use .format_map to avoid errors if a placeholder doesn't exist in the map
         response_text = response_text.format_map(default_map(format_map))
         
     return response_text
-
-# Helper class to prevent errors if a placeholder in the JSON is not found in our data
-class default_map(dict):
-    def __missing__(self, key):
-        return f'{{{key}}}'
