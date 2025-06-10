@@ -84,4 +84,9 @@ def user_info_form():
             email = st.text_input("Email", st.session_state.customer_info.get("email", ""))
             phone = st.text_input("Phone Number", st.session_state.customer_info.get("phone", ""))
             countries = sorted(list(PORTS_BY_COUNTRY.keys()))
-            selected_country = st.selectbox("Country", countries, index=
+            selected_country = st.selectbox("Country", countries, index=None, placeholder="Select your country...")
+            available_ports = PORTS_BY_COUNTRY.get(selected_country, [])
+            selected_port = st.selectbox("Port of Discharge", available_ports, index=None, placeholder="Select a port...", disabled=not selected_country)
+            if st.form_submit_button("Save Details"):
+                st.session_state.customer_info = {"name": name, "email": email, "phone": phone, "country": selected_country, "port_of_discharge": selected_port}
+                st.success("Your details have been saved!")
