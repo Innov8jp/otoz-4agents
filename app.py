@@ -1,86 +1,141 @@
+# app.py (Final Production Version)
+
 import streamlit as st
-import pandas as pd
-import os
 import traceback
+import pandas as pd
+from config import *
+from utils import *
 
-# --- Constants (Simplified for this test) ---
-PAGE_TITLE = "Otoz.ai - Final Diagnostic"
-PAGE_ICON = "ախ"
-INVENTORY_FILE_PATH = 'inventory.csv'
+# --- UI FUNCTIONS ---
+def user_info_form():
+    with st.sidebar:
+        st.header("Your Information")
+        with st.form("customer_info_form"):
+            name = st.text_input("Full Name", st.session_state.customer_info.get("name", ""))
+            email = st.text_input("Email", st.session_state.customer_info.get("email", ""))
+            phone = st.text_input("Phone Number", st.session_state.customer_info.get("phone", ""))
+            countries = sorted(list(PORTS_BY_COUNTRY.keys()))
+            selected_country = st.selectbox("Country", countries, index=None, placeholder="Select your country...")
+            available_ports = PORTS_BY_COUNTRY.get(selected_country, [])
+            selected_port = st.selectbox("Port of Discharge", available_ports, index=None, placeholder="Select a port...", disabled=not selected_country)
+            if st.form_submit_button("Save Details"):
+                st.session_state.customer_info = {"name": name, "email": email, "phone": phone, "country": selected_country, "port_of_discharge": selected_port}
+                st.success("Your details have been saved!")
 
-# --- Core Function (Caching is intentionally disabled) ---
-def load_inventory():
-    """Loads inventory directly from the CSV file. Caching is disabled."""
-    try:
-        st.write("Attempting to run `pd.read_csv('inventory.csv')` now...")
-        df = pd.read_csv(INVENTORY_FILE_PATH)
-        st.success("✅ `pd.read_csv` command executed successfully!")
-        return df
-    except FileNotFoundError:
-        st.error(f"❌ `pd.read_csv` failed with FileNotFoundError.")
-        return pd.DataFrame()
-    except Exception as e:
-        st.error(f"An error occurred inside `load_inventory`: {e}")
-        st.code(traceback.format_exc())
-        return pd.DataFrame()
+def car_filters(inventory):
+    with st.sidebar:
+        st.header("Vehicle Filters")
+        if inventory.empty:
+            st.warning("No inventory data found."); return
+        with st.form("car_filters_form"):
+            make_list = ["All"] + sorted(inventory['make'].unique())
+            selected_make = st.selectbox("Make", make_list, index=0)
+            model_list = ["All"]
+            if selected_make != "All": model_list += sorted(inventory[inventory['make'] == selected_make]['model'].unique())
+            selected_model = st.selectbox("Model", model_list, index=0)
+            year_min, year_max = int(inventory['year'].min()), int(inventory['year'].max())
+            selected_years = st.slider("Year", year_min, year_max, (year_min, year_max))
+            price_min, price_max = 0, int(inventory['price'].max())
+            selected_prices = st.slider("Price (JPY)", price_min, price_max, (price_min, price_max), step=50000)
+            if st.form_submit_button("Show Results"):
+                st.session_state.active_filters = {"make": selected_make, "model": selected_model, "year_min": selected_years[0], "year_max": selected_years[1], "price_min": selected_prices[0], "price_max": selected_prices[1]}
+                st.session_state.current_car_index = 0; st.rerun()
 
-# --- Main Application ---
+def filter_inventory(inventory, filters):
+    if not filters: return inventory
+    query = "(year >= @filters['year_min']) & (year <= @filters['year_max']) & (price >= @filters['price_min']) & (price <= @filters['price_max'])"
+    if filters['make'] != "All":
+        query += " & (make == @filters['make'])"
+        if filters['model'] != "All": query += " & (model == @filters['model'])"
+    return inventory.query(query)
+
+def display_car_card(car, shipping_option):
+    price_breakdown = calculate_total_price(car['price'], shipping_option)
+    with st.container(border=True):
+        col1, col2 = st.columns([1, 2])
+        with col1: st.image(car['image_url'], use_column_width=True)
+        with col2:
+            st.subheader(f"{car.get('year')} {car.get('make')} {car.get('model')}")
+            st.write(f"**ID:** {car.get('id')} | **Mileage:** {car.get('mileage', 0):,} km")
+            st.write(f"**Color:** {car.get('color')} | **Transmission:** {car.get('transmission')}")
+            st.write(f"**Base Price (Vehicle Only):** ¥{car.get('price', 0):,}")
+            st.success(f"**Total Price ({shipping_option}): ¥{int(price_breakdown['total_price']):,}**")
+            with st.expander("Click to see full price breakdown"):
+                st.markdown(f"**Base Vehicle Price:** `¥{price_breakdown['base_price']:,}`")
+                if price_breakdown['domestic_transport'] > 0: st.markdown(f"**Domestic Transport (to Port):** `¥{price_breakdown['domestic_transport']:,}`")
+                if price_breakdown['freight_cost'] > 0: st.markdown(f"**Ocean Freight:** `¥{price_breakdown['freight_cost']:,}`")
+                if price_breakdown['insurance'] > 0: st.markdown(f"**Marine Insurance:** `¥{price_breakdown['insurance']:,.0f}`")
+                st.divider(); st.markdown(f"### **Total:** `¥{price_breakdown['total_price']:,.0f}`")
+
+def display_chat_interface():
+    st.subheader("💬 Chat with our Sales Team")
+    for msg in st.session_state.chat_messages:
+        st.chat_message(msg["role"]).write(msg["content"])
+    if prompt := st.chat_input("Ask a question..."):
+        st.session_state.chat_messages.append({"role": "user", "content": prompt})
+        bot_response = get_bot_response(prompt)
+        st.session_state.chat_messages.append({"role": "assistant", "content": bot_response})
+        st.rerun()
+
+# --- MAIN APPLICATION ---
 def main():
-    st.set_page_config(page_title=PAGE_TITLE, page_icon=PAGE_ICON, layout="wide")
-    st.title(f"{PAGE_ICON} Final Diagnostic Test")
+    st.set_page_config(page_title=PAGE_TITLE, page_icon=PAGE_ICON, layout="wide", initial_sidebar_state="expanded")
 
-    # --- Deep File Inspection Block ---
-    st.subheader("Deep File Inspection Results")
-    try:
-        cwd = os.getcwd()
-        st.write(f"**Current Directory:** `{cwd}`")
-        
-        files_in_repository = os.listdir(cwd)
-        st.write("**Files Found by `os.listdir()`:**")
-        st.code('\n'.join(sorted(files_in_repository)))
-        
-        target_file = 'inventory.csv'
-        if target_file in files_in_repository:
-            st.success(f"✅ **Check 1:** The file `{target_file}` exists in the list.")
-            
-            file_path = os.path.join(cwd, target_file)
-            st.write(f"**Full Path:** `{file_path}`")
-            
-            is_a_file = os.path.isfile(file_path)
-            if is_a_file:
-                st.success(f"✅ **Check 2:** `os.path.isfile()` confirms it is a file.")
-                try:
-                    with open(file_path, 'r') as f:
-                        content_snippet = f.read(100)
-                        st.write("**First 100 characters of file content:**")
-                        st.code(content_snippet)
-                    st.success("✅ **Check 3:** Successfully opened and read from the file.")
-                except Exception as read_e:
-                    st.error(f"❌ **Check 3 FAILED:** Could not open or read the file. Error: {read_e}")
-            else:
-                st.error(f"❌ **Check 2 FAILED:** `os.path.isfile()` reports this is NOT a file. It may be a folder or a broken link.")
-        else:
-            st.error(f"❌ **Check 1 FAILED:** The file `{target_file}` does not exist in the list.")
-            st.info("Please ensure the file is named exactly `inventory.csv` (all lowercase) and is in the main directory of your GitHub repository.")
+    state_keys = {
+        'current_car_index': 0, 'customer_info': {}, 'active_filters': {},
+        'offer_placed': False, 'chat_messages': [], 'car_in_chat': {},
+        'shipping_option': 'FOB'
+    }
+    for key, default_value in state_keys.items():
+        if key not in st.session_state:
+            st.session_state[key] = default_value
 
-    except Exception as e:
-        st.error(f"A critical error occurred during the file inspection: {e}")
+    st.title(f"{PAGE_ICON} {PAGE_TITLE}")
     
-    st.markdown("---")
-    
-    # --- Attempt to load data using the function ---
     inventory = load_inventory()
+    if inventory.empty:
+        st.error("Critical Error: Inventory could not be loaded."); return
     
-    if not inventory.empty:
-        st.success("Application FINALLY loaded the inventory successfully!")
-        st.dataframe(inventory.head())
+    user_info_form()
+    car_filters(inventory)
+    
+    if st.session_state.offer_placed:
+        st.markdown(f"### Continuing your offer for:")
+        display_car_card(pd.Series(st.session_state.car_in_chat), st.session_state.shipping_option)
+        display_chat_interface()
     else:
-        st.error("Application failed to load the inventory.")
+        filtered_inventory = filter_inventory(inventory, st.session_state.active_filters)
+        if filtered_inventory.empty:
+            st.warning("No vehicles match your current filters."); return
 
-# --- Script Entry Point ---
+        if st.session_state.current_car_index >= len(filtered_inventory): st.session_state.current_car_index = 0
+        current_car = filtered_inventory.iloc[st.session_state.current_car_index]
+        
+        display_car_card(current_car, st.session_state.shipping_option)
+        st.session_state.shipping_option = st.radio("Shipping Option", ["FOB", "C&F", "CIF"],
+                                                     index=["FOB", "C&F", "CIF"].index(st.session_state.shipping_option),
+                                                     horizontal=True)
+
+        col1, col2, _ = st.columns([1.5, 1.5, 4])
+        with col1:
+            if st.button("❤️ Place Offer", use_container_width=True):
+                if not all(st.session_state.customer_info.get(key) for key in ["name", "email", "phone"]):
+                    st.error("Please complete your name, email, and phone in the sidebar first.")
+                else:
+                    st.session_state.offer_placed = True
+                    st.session_state.car_in_chat = current_car.to_dict()
+                    if not st.session_state.chat_messages:
+                        st.session_state.chat_messages = [{"role": "assistant", "content": f"Hello {st.session_state.customer_info['name']}! I'm Sparky. I can help finalize your offer on the {current_car['year']} {current_car['make']} {current_car['model']}. What would you like to know?"}]
+                    st.rerun()
+        with col2:
+            if st.button("❌ Next Vehicle", use_container_width=True):
+                st.session_state.current_car_index = (st.session_state.current_car_index + 1) % len(filtered_inventory)
+                st.rerun()
+
+# --- SCRIPT ENTRY POINT ---
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        st.error("A top-level critical error occurred.")
+        st.error("A critical error occurred.")
         st.code(traceback.format_exc())
