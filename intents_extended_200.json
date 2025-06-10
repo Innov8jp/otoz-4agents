@@ -1,0 +1,188 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": [
+        "Hi",
+        "Hello",
+        "Hey",
+        "Good morning",
+        "Good afternoon",
+        "Hi there"
+      ],
+      "responses": [
+        "Hi there! \ud83d\udc4b How\u2019s your day going?",
+        "Hey! How can I assist you with your car search today?"
+      ]
+    },
+    {
+      "tag": "goodbye",
+      "patterns": [
+        "Bye",
+        "Goodbye",
+        "See you",
+        "Talk later",
+        "Thanks, that\u2019s all"
+      ],
+      "responses": [
+        "Thanks for stopping by! Come back anytime.",
+        "See you soon \u2014 your next car is just one click away!"
+      ]
+    },
+    {
+      "tag": "get_price",
+      "patterns": [
+        "How much is it?",
+        "What's the price?",
+        "Tell me the cost",
+        "How much?"
+      ],
+      "responses": [
+        "It\u2019s listed at ${price}, but we might be able to offer a deal.",
+        "The current price is ${price}."
+      ]
+    },
+    {
+      "tag": "make_offer",
+      "patterns": [
+        "Can I offer 8500?",
+        "My offer is 9000",
+        "What about $7500?"
+      ],
+      "responses": [
+        "Thanks for the offer! Let me see what I can do.",
+        "That\u2019s a bit low. I could stretch to ${counter_offer}."
+      ]
+    },
+    {
+      "tag": "ask_condition",
+      "patterns": [
+        "Is it in good condition?",
+        "Any damage?"
+      ],
+      "responses": [
+        "It\u2019s in great condition \u2014 minor scratches only.",
+        "Clean report and recently serviced."
+      ]
+    },
+    {
+      "tag": "ask_shipping",
+      "patterns": [
+        "Can you ship it?",
+        "How long is shipping?"
+      ],
+      "responses": [
+        "We ship globally. Delivery takes 18\u201324 days.",
+        "C&F and CIF terms available."
+      ]
+    },
+    {
+      "tag": "confirm_purchase",
+      "patterns": [
+        "Yes, deal",
+        "I\u2019ll buy it",
+        "Looks good"
+      ],
+      "responses": [
+        "Awesome! Preparing your invoice.",
+        "Great! Shall we proceed with the invoice?"
+      ]
+    },
+    {
+      "tag": "ask_payment",
+      "patterns": [
+        "How do I pay?",
+        "Payment options?"
+      ],
+      "responses": [
+        "Wire transfer is preferred. Details follow after confirmation."
+      ]
+    },
+    {
+      "tag": "restart",
+      "patterns": [
+        "Restart",
+        "Start again"
+      ],
+      "responses": [
+        "Let's start fresh. What brand or car are you interested in?"
+      ]
+    },
+    {
+      "tag": "show_more",
+      "patterns": [
+        "Show more",
+        "Other options?"
+      ],
+      "responses": [
+        "Here are more cars that match your filters."
+      ]
+    },
+    {
+      "tag": "unknown",
+      "patterns": [
+        "@923314561616 tomorrow ill discuss",
+        "I need format",
+        "Here.",
+        "Good morning everyone.",
+        "---------------------------------------",
+        "@817016879254 plz join",
+        "Rikuso table doesn't cover the okinawa yard",
+        "I translate and show usually",
+        "Please check beforward  and sbt own stock.",
+        "I change the password"
+      ],
+      "responses": [
+        "@923314561616 tomorrow ill discuss",
+        "I need format",
+        "Here.",
+        "Good morning everyone.",
+        "---------------------------------------"
+      ]
+    },
+    {
+      "tag": "ask_for_photos",
+      "patterns": [
+        "Daihatsu move pictures",
+        "Fielder photos\u261d\ufe0f",
+        "What mean your pictures?",
+        "@817016879254 client asking for more photos (like 36 images )",
+        "Pictures\u261d",
+        "I have shared all the available pictures with you.",
+        "I re sent the pictures!",
+        "Can you pick up the picture?",
+        "Vezel photos\u261d\ufe0f",
+        "Link or picture paste in column"
+      ],
+      "responses": [
+        "Daihatsu move pictures",
+        "Fielder photos\u261d\ufe0f",
+        "What mean your pictures?",
+        "@817016879254 client asking for more photos (like 36 images )",
+        "Pictures\u261d"
+      ]
+    },
+    {
+      "tag": "ask_for_reports",
+      "patterns": [
+        "Otherhands, i will dispatch the export certificate for 4 cars.",
+        "When we receive the payment from your company, i will send export certificates.",
+        "I will dispatch the document for raize and rocky on tomorrow",
+        "I`m waiting the certificate from qisj.",
+        "I will dispatch the documents on tomorrow.",
+        "Documents for both units are going to the same delivery address and can be posted together if it\u2019ll be convenient for you as well.",
+        "Kindly send the radio sd cards with the documents",
+        "Documents and good are can not be same package",
+        "I`m waiting the documents from auction for booking and inspection. \u200e<\u3053\u306e\u30e1\u30c3\u30bb\u30fc\u30b8\u306f\u7de8\u96c6\u3055\u308c\u307e\u3057\u305f>",
+        "Dispatch spare keys with bl & documents."
+      ],
+      "responses": [
+        "I am sure you have created a number of moana azul documents.",
+        "I understand your request for the export certificate.",
+        "I plan to dispatch the documents for vezel and tiguan today",
+        "The tasks report for today, 16-10-24.",
+        "When we receive the payment from your company, i will send export certificates."
+      ]
+    }
+  ]
+}
