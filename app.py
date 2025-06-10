@@ -1,182 +1,183 @@
-import os
-import re
-import csv
-import io
-import random
-import requests
+# ==============================================================================
+# FINAL PRODUCTION SCRIPT (All-in-One Version)
+# ==============================================================================
+
+# --- SECTION 1: IMPORTS ---
 import streamlit as st
 import pandas as pd
-import altair as alt
+import random
+import os
+import traceback
 from datetime import datetime
-try:
-    from fpdf import FPDF
-    ENABLE_PDF = True
-except ImportError:
-    ENABLE_PDF = False
+from difflib import get_close_matches
+import json
+import re
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 1. Top-level Page Config
-st.set_page_config(
-    page_title="Sparky - AI Sales Assistant",
-    page_icon="🚗",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# --- SECTION 2: GLOBAL CONSTANTS & SETTINGS ---
+PAGE_TITLE = "Sparky - AI Sales Assistant"
+PAGE_ICON = "🚗"
+INVENTORY_FILE_PATH = 'inventory.csv'
+INTENTS_FILE_PATH = 'intents_extended_50.json'
 
-# =====================================================================================
-# 2. Dynamic Currency Rates (fetch and cache)
-@st.cache_data(ttl=3600)
-def get_currency_rates(base="JPY"):
+
+# --- SECTION 3: CORE HELPER FUNCTIONS ---
+
+@st.cache_data
+def load_data(file_path):
+    """A single, robust function to load either CSV or JSON data files."""
+    if not os.path.exists(file_path):
+        st.error(f"Required data file not found: `{file_path}`. Please upload it to your GitHub repository.")
+        return None
+    
     try:
-        resp = requests.get(f"https://api.exchangerate.host/latest?base={base}", timeout=5)
-        return resp.json().get("rates", {"JPY":1})
-    except:
-        return {"JPY":1, "USD":1/155, "PKR":1/0.55}
+        if file_path.endswith('.csv'):
+            return pd.read_csv(file_path)
+        elif file_path.endswith('.json'):
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        st.error(f"Error loading data from `{file_path}`: {e}")
+        return None
 
-CURRENCIES = get_currency_rates()
-DEFAULT_CURRENCY = "JPY"
+def get_bot_response(user_input: str):
+    """Generates an intelligent response by finding the best-matching intent from the JSON data."""
+    intents_data = load_data(INTENTS_FILE_PATH)
+    if not intents_data:
+        return "Error: Could not load chatbot training data. Please check the intents file."
 
-# =====================================================================================
-# 3. Sidebar: Onboarding, Profile, Budget & Filters
-with st.sidebar:
-    st.title("Lead Profile 📋")
-    if st.button("Start Chat", use_container_width=True):
-        # Reset session state except cached data
-        keys = list(st.session_state.keys())
-        for k in keys:
-            if k not in ("_mutations",):
-                del st.session_state[k]
-        st.session_state.chat_started = True
-        st.session_state.history = []
-    if st.session_state.get("chat_started"):
-        st.subheader("Your Details")
-        st.session_state.user_name = st.text_input("Name", st.session_state.get("user_name", ""))
-        st.session_state.user_email = st.text_input("Email", st.session_state.get("user_email", ""))
-        st.session_state.user_country = st.text_input("Country", st.session_state.get("user_country", ""))
-        if st.button("Save Profile", use_container_width=True): st.success("Profile saved!")
+    lowered_input = user_input.lower()
+    
+    # Create a mapping of all patterns to their intent tag for efficient lookup
+    pattern_to_tag = {pattern.lower(): intent['tag'] 
+                      for intent in intents_data['intents'] 
+                      for pattern in intent['patterns']}
+    
+    all_patterns = list(pattern_to_tag.keys())
+    
+    # Find the best matching pattern from the user's input
+    matches = get_close_matches(lowered_input, all_patterns, n=1, cutoff=0.6)
+    
+    response_text = "I'm sorry, I don't quite understand. A human sales agent will review your question."
+    if matches:
+        best_match_pattern = matches[0]
+        tag = pattern_to_tag[best_match_pattern]
+        
+        for intent in intents_data['intents']:
+            if intent['tag'] == tag:
+                response_text = random.choice(intent['responses'])
+                break
+
+    # Fill in any dynamic placeholders like {price} in the response
+    if '{' in response_text:
+        car_details = st.session_state.get('car_in_chat', {})
+        
+        # Use a default dictionary to avoid errors if a key is missing
+        format_map = {
+            "price": f"¥{car_details.get('price', 0):,}",
+            "total_price": f"¥{st.session_state.get('total_price', 0):,}",
+            "year": car_details.get('year', ''),
+            "make": car_details.get('make', ''),
+            "model": car_details.get('model', ''),
+        }
+        response_text = response_text.format(**format_map)
+        
+    return response_text
+
+# --- SECTION 4: UI AND MAIN APPLICATION LOGIC ---
+
+def display_car_details(car_data):
+    """A simple function to display the key details of a selected car."""
+    st.subheader(f"{car_data.get('year')} {car_data.get('make')} {car_data.get('model')}")
+    
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        # Use a placeholder if image_url is missing
+        image_url = car_data.get('image_url', f"https://placehold.co/600x400/grey/white?text=No+Image")
+        st.image(image_url, use_column_width=True)
+    with col2:
+        st.write(f"**Price:** ¥{car_data.get('price', 0):,}")
+        st.write(f"**Mileage:** {car_data.get('mileage', 0):,} km")
+        st.write(f"**Color:** {car_data.get('color', 'N/A')}")
+        st.write(f"**Transmission:** {car_data.get('transmission', 'N/A')}")
+        st.write(f"**Grade:** {car_data.get('grade', 'N/A')}")
+
+def main():
+    """Main function to run the Streamlit application."""
+    st.set_page_config(page_title=PAGE_TITLE, page_icon=PAGE_ICON, layout="wide")
+
+    # --- Initialize Session State ---
+    if "offer_placed" not in st.session_state:
+        st.session_state.offer_placed = False
+    if "chat_messages" not in st.session_state:
+        st.session_state.chat_messages = []
+    if "car_in_chat" not in st.session_state:
+        st.session_state.car_in_chat = {}
+    if "total_price" not in st.session_state:
+        st.session_state.total_price = 0
+
+    st.title(f"{PAGE_ICON} Sparky - AI Sales Assistant")
+
+    inventory = load_data(INVENTORY_FILE_PATH)
+    if inventory is None or inventory.empty:
+        st.error("Could not load inventory. Please ensure `inventory.csv` is uploaded and correct.")
+        return
+
+    # --- CHAT VIEW ---
+    if st.session_state.offer_placed:
+        car_details = st.session_state.car_in_chat
+        display_car_details(car_details)
         st.markdown("---")
-        st.subheader("Budget & Currency")
-        st.session_state.budget = st.slider(
-            "Budget (JPY)", 500_000, 15_000_000,
-            st.session_state.get("budget", (1_000_000,5_000_000)), step=100_000
-        )
-        curr_opts = list(CURRENCIES.keys())
-        idx = curr_opts.index(st.session_state.get("currency", DEFAULT_CURRENCY))
-        st.session_state.currency = st.selectbox(
-            "Display Prices in", curr_opts, index=idx
-        )
-        st.markdown("---")
-        st.subheader("Filters 🔎")
-        makes = [""] + sorted(st.session_state.inventory_df['make'].unique())
-        st.session_state.filters_make = st.selectbox("Make", makes)
-        st.session_state.filters_year = st.slider(
-            "Year Range", 2015, 2025,
-            st.session_state.get("filters_year", (2018,2022))
-        )
-        if st.button("Apply Filters & Show Deals", use_container_width=True):
-            handle_user_message("show deals")
-            st.experimental_rerun()
+        st.subheader("💬 Chat with our Sales Team")
+
+        # Display chat history
+        for message in st.session_state.chat_messages:
+            with st.chat_message(message["role"]):
+                st.write(message["content"])
+
+        # Handle new user input
+        if prompt := st.chat_input("Ask your question or make an offer..."):
+            st.session_state.chat_messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.write(prompt)
+            
+            # Get bot response and display it
+            response = get_bot_response(prompt)
+            st.session_state.chat_messages.append({"role": "assistant", "content": response})
+            with st.chat_message("assistant"):
+                st.write(response)
+
+    # --- BROWSER VIEW ---
     else:
-        st.info("Click 'Start Chat' to begin your session.")
+        st.subheader("Our Current Inventory")
+        # Use st.data_editor for a spreadsheet-like view
+        st.data_editor(inventory, use_container_width=True, hide_index=True)
+        
+        # Create a user-friendly list for the selectbox
+        car_list = [f"{idx}: {row['year']} {row['make']} {row['model']} (¥{row['price']:,})" for idx, row in inventory.iterrows()]
+        selected_car_str = st.selectbox("Select a vehicle from the list above to make an offer:", car_list, index=None, placeholder="Choose a car...")
 
-# =====================================================================================
-# 4. Load & Cache Inventory + Market Data
-@st.cache_data
-def load_inventory(path='Inventory Agasta.csv'):
-    if os.path.exists(path):
-        try:
-            df = pd.read_csv(path)
-            df.columns = [c.lower() for c in df.columns]
-            return df
-        except:
-            pass
-    # fallback dummy inventory
-    makes = ["Toyota","Honda","Nissan"]
-    data = []
-    for _ in range(500):
-        mk = random.choice(makes)
-        data.append({
-            'make': mk,
-            'model': random.choice(["Corolla","Civic","Altima"]),
-            'year': random.randint(2015,2025),
-            'price': random.randint(500_000,5_000_000),
-            'mileage': random.randint(5_000,150_000),
-            'fuel': 'Petrol', 'transmission': 'Automatic',
-            'color': 'White', 'grade': 'S', 'location': 'Tokyo',
-            'id': f"ID{random.randint(1000,9999)}"
-        })
-    return pd.DataFrame(data)
+        if selected_car_str:
+            # Extract the index from the selected string
+            selected_idx = int(selected_car_str.split(':')[0])
+            selected_car = inventory.iloc[selected_idx].to_dict()
+            
+            st.markdown("---")
+            display_car_details(selected_car)
+            
+            if st.button(f"❤️ Place Offer on This Vehicle"):
+                st.session_state.offer_placed = True
+                st.session_state.car_in_chat = selected_car
+                # Initialize total price for placeholder use in chat
+                st.session_state.total_price = selected_car.get('price', 0)
+                st.session_state.chat_messages = [
+                    {"role": "assistant", "content": f"Hello! I'm Sparky. I can help you finalize your offer on the {selected_car['year']} {selected_car['make']} {selected_car['model']}. What would you like to know?"}
+                ]
+                st.rerun()
 
-st.session_state.inventory_df = load_inventory()
-
-# =====================================================================================
-# 5. Helper: Fetch & Filter Inventory
-@st.cache_data
-def fetch_inventory(make, year):
-    df = st.session_state.inventory_df
-    return df[(df.make.str.lower()==make.lower()) & (df.year==year)]
-
-# =====================================================================================
-# 6. Chat UI Logic
-if not st.session_state.get("history"): st.session_state.history = []
-chat_container = st.container()
-if st.session_state.get("chat_started"):
-    with chat_container:
-        # Display history
-        for msg in st.session_state.history:
-            avatar = BOT_AVATAR_URL if msg['role']=='assistant' else USER_AVATAR_URL
-            with st.chat_message(msg['role'], avatar=avatar): st.markdown(msg['content'])
-        # Input form
-        with st.form(key='chat_form', clear_on_submit=True):
-            user_input = st.text_input("Your message...", key='user_input')
-            send = st.form_submit_button("Send")
-        if send:
-            handle_user_message(user_input)
-else:
-    chat_container.info("Your chat will appear here once you start.")
-
-# =====================================================================================
-# 7. Handler: parse intents and respond
-def handle_user_message(text):
-    text = text.strip(); lc = text.lower()
-    st.session_state.history.append({"role":"user","content":text})
-    # Show deals
-    if lc == "show deals":
-        df = st.session_state.inventory_df
-        if st.session_state.filters_make:
-            df = df[df.make==st.session_state.filters_make]
-        y0,y1 = st.session_state.filters_year
-        df = df[(df.year>=y0)&(df.year<=y1)]
-        st.session_state.history.append({"role":"assistant","content":f"Found {len(df)} deals. First 3:"})
-        for _,c in df.head(3).iterrows():
-            price = int(c.price * CURRENCIES[st.session_state.currency])
-            st.session_state.history.append({"role":"assistant","content":f"{c.make} {c.model} ({c.year}) - {st.session_state.currency} {price:,}"})
-        return
-    # Contact support
-    if lc == "contact support":
-        st.session_state.history.append({"role":"assistant","content":f"Contact: {st.session_state.user_email or 'sales@otoz.ai'}"})
-        return
-    # Inventory lookup
-    m = re.match(r"(\w+)\s*(\d{4})", text)
-    if m and m.group(1).capitalize() in st.session_state.inventory_df.make.unique():
-        make = m.group(1).capitalize(); year = int(m.group(2))
-        st.session_state.history.append({"role":"assistant","content":f"Looking up {make} {year}..."})
-        cars = fetch_inventory(make,year)
-        if not cars.empty:
-            # Chart
-            recs = st.session_state.inventory_df[st.session_state.inventory_df.make==make]
-            chart_df = recs.groupby('year').price.mean().reset_index()
-            chart_df['display'] = chart_df.price * CURRENCIES[st.session_state.currency]
-            st.altair_chart(alt.Line(chart_df, x='year', y='display'), use_container_width=True)
-            c = cars.iloc[0]
-            st.image(f"https://dummyimage.com/200x100/000/fff&text={make}+{year}")
-            st.write(f"**{year} {make} {c.model}**")
-            st.write(f"Price: {st.session_state.currency} {int(c.price * CURRENCIES[st.session_state.currency]):,}")
-        else:
-            st.session_state.history.append({"role":"assistant","content":"No listings found."})
-        return
-    # Fallback
-    st_session = st.session_state
-    st_session.history.append({"role":"assistant","content":"Try 'show deals' or specify car make+year."})
-
-# End of script
+# --- SCRIPT ENTRY POINT ---
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        st.error("A critical error occurred. The application has to stop.")
+        st.code(traceback.format_exc())
