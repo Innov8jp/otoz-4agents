@@ -2,22 +2,8 @@ make,model,year,price,mileage,color,fuel,transmission,grade
 Toyota,Aqua,2019,950000,55000,Pearl White,Hybrid,Automatic,4.5
 Toyota,Vitz,2018,820000,62000,Silver,Gasoline,Automatic,4.0
 Toyota,Corolla,2020,1500000,35000,Black,Hybrid,Automatic,5.0
-Toyota,Prius,2019,1350000,48000,Blue,Hybrid,Automatic,4.5
-Toyota,Harrier,2021,2800000,25000,Black,Gasoline,Automatic,5.0
-Toyota,RAV4,2020,2500000,30000,White,Hybrid,Automatic,4.5
 Honda,Fit,2019,890000,58000,Red,Hybrid,Automatic,4.0
 Honda,Vezel,2020,1800000,40000,Gray,Hybrid,Automatic,4.5
-Honda,CR-V,2019,2200000,45000,Dark Blue,Gasoline,Automatic,4.5
-Honda,Civic,2021,2400000,22000,White,Gasoline,Automatic,5.0
 Nissan,Note,2019,780000,65000,Silver,Hybrid,Automatic,4.0
-Nissan,Serena,2018,1600000,75000,Black,Hybrid,Automatic,4.0
-Nissan,X-Trail,2019,1900000,60000,Brown,Gasoline,Automatic,4.5
-Mazda,Demio,2018,750000,70000,Red,Gasoline,Automatic,3.5
 Mazda,CX-5,2020,2300000,38000,Maroon,Diesel,Automatic,4.5
-Mazda,CX-8,2021,2900000,28000,Black,Diesel,Automatic,5.0
-Mercedes-Benz,C-Class,2019,3200000,42000,Silver,Gasoline,Automatic,4.5
-Mercedes-Benz,E-Class,2020,4500000,35000,Black,Diesel,Automatic,5.0
-Mercedes-Benz,A-Class,2020,2800000,30000,White,Gasoline,Automatic,4.5
 BMW,3 Series,2019,3500000,40000,Blue,Gasoline,Automatic,4.5
-BMW,X1,2020,3100000,33000,Gray,Diesel,Automatic,4.5
-BMW,X3,2021,4800000,25000,White,Diesel,Automatic,5.0
