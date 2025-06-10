@@ -1,4 +1,4 @@
-# utils.py
+# utils.py (Version with PDF generation temporarily removed)
 
 import streamlit as st
 import pandas as pd
@@ -8,19 +8,7 @@ import logging
 from datetime import datetime
 from config import * # Import all constants from our new config file
 
-try:
-    from fpdf import FPDF
-    ENABLE_PDF_INVOICING = True
-except ImportError:
-    ENABLE_PDF_INVOICING = False
-
-# --- PDF INVOICE CLASS ---
-class PDF(FPDF):
-    def header(self):
-        if os.path.exists(LOGO_PATH): self.image(LOGO_PATH, 10, 8, 33)
-        self.set_font('Arial', 'B', 15); self.cell(80); self.cell(30, 10, 'Invoice', 0, 0, 'C'); self.ln(20)
-    def footer(self):
-        self.set_y(-15); self.set_font('Arial', 'I', 8); self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+# --- NOTE: All PDF-related code has been removed from this file ---
 
 # --- DATA LOADING ---
 @st.cache_data
@@ -75,53 +63,19 @@ def calculate_total_price(base_price, option):
     breakdown['total_price'] = sum(breakdown.values())
     return breakdown
 
-def generate_pdf_invoice(car, customer_info, shipping_option):
-    if not ENABLE_PDF_INVOICING: return None
-    try:
-        price_breakdown = calculate_total_price(car['price'], shipping_option)
-        pdf = PDF(); pdf.add_page(); pdf.set_font("Arial", size=12)
-        for key, value in SELLER_INFO.items(): pdf.cell(0, 7, f"Seller {key.capitalize()}: {value}", 0, 1)
-        pdf.ln(10)
-        for key, value in customer_info.items():
-             if key not in ['country', 'port_of_discharge']: pdf.cell(0, 7, f"Customer {key.capitalize()}: {value}", 0, 1)
-        if customer_info.get("country"): pdf.cell(0, 7, f"Destination: {customer_info.get('port_of_discharge', 'N/A')}, {customer_info.get('country')}", 0, 1)
-        pdf.ln(10)
-        pdf.set_font("Arial", 'B', 12); pdf.cell(0, 10, "Vehicle Details", 0, 1); pdf.set_font("Arial", size=12)
-        pdf.cell(0, 7, f"{car['year']} {car['make']} {car['model']} (ID: {car.get('id', 'N/A')})", 0, 1)
-        pdf.cell(0, 7, f"Color: {car.get('color', 'N/A')}, Transmission: {car.get('transmission', 'N/A')}", 0, 1); pdf.ln(10)
-        pdf.set_font("Arial", 'B', 12); pdf.cell(0, 10, f"Pricing ({shipping_option})", 0, 1); pdf.set_font("Arial", size=12)
-        for key, value in price_breakdown.items():
-            if value > 0 and key != 'total_price': pdf.cell(0, 7, f"- {key.replace('_', ' ').capitalize()}: ¥{value:,.0f}", 0, 1)
-        pdf.ln(5); pdf.set_font("Arial", 'B', 14); pdf.cell(0, 10, f"Total Price: ¥{price_breakdown['total_price']:,.0f}", 0, 1)
-        if not os.path.exists("invoices"): os.makedirs("invoices")
-        filename = f"invoices/invoice_{car['id']}_{datetime.now().strftime('%Y%m%d')}.pdf"
-        pdf.output(filename)
-        return filename
-    except Exception as e:
-        logging.error(f"Error generating PDF invoice: {e}"); return None
-
 def get_bot_response(user_input: str):
     lowered_input = user_input.lower()
-    customer_info = st.session_state.get('customer_info', {})
-    car_details = st.session_state.get('car_in_chat', {})
-    car_name = f"{car_details.get('year', '')} {car_details.get('make', '')} {car_details.get('model', '')}"
+    # NOTE: "invoice" keyword logic is simplified as we cannot generate one right now.
     if any(keyword in lowered_input for keyword in ["another car", "start over", "change car", "go back"]):
         st.session_state.offer_placed = False
         st.session_state.chat_messages = []; st.session_state.car_in_chat = {}
         st.rerun()
-    if not customer_info.get("country"):
-        return "I see we haven't confirmed your destination. To which country will you be shipping the vehicle?"
-    if not customer_info.get("port_of_discharge"):
-        return f"Thanks! And which port in {customer_info.get('country')} will be the port of discharge?"
     if "invoice" in lowered_input:
-        return "Absolutely. I can prepare the proforma invoice. Just to confirm, are you ready to proceed with the purchase at the displayed price?"
-    if any(keyword in lowered_input for keyword in ["yes", "proceed", "confirm", "i agree"]) and st.session_state.get('invoice_request_pending'):
-        st.session_state.generate_invoice_request = True
-        return "Excellent! Generating your invoice now. Please use the download button that appears."
-    st.session_state.invoice_request_pending = "shall I issue" in lowered_input or "are you ready to proceed" in lowered_input
+        return "Our sales team will prepare and email you the proforma invoice shortly. Can I help with anything else?"
     if any(keyword in lowered_input for keyword in ["payment", "pay", "bank"]):
         return "We accept wire transfers to our corporate bank account in Tokyo. The full details will be on the proforma invoice."
     if any(keyword in lowered_input for keyword in ["price", "discount", "negotiate", "offer"]):
+        car_details = st.session_state.get('car_in_chat', {})
         price_breakdown = calculate_total_price(car_details.get('price', 0), st.session_state.get('shipping_option'))
         total_price = f"{int(price_breakdown['total_price']):,}"
         return f"The current total price is ¥{total_price} {st.session_state.get('shipping_option')}. Our prices are competitive, but feel free to state your best offer for our sales team to review."
