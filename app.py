@@ -3,7 +3,7 @@
 import streamlit as st
 import traceback
 import pandas as pd
-from datetime import datetime
+import os # Import the 'os' module
 from config import *
 from utils import *
 
@@ -51,10 +51,6 @@ def filter_inventory(inventory, filters):
     return inventory.query(query)
 
 def display_car_card(car, shipping_option):
-    # New: Check for reservation status
-    if st.session_state.reservation_time and datetime.now() < st.session_state.reservation_time:
-        st.warning(f"This vehicle is reserved for you until {st.session_state.reservation_time.strftime('%Y-%m-%d %H:%M')} JST.")
-
     price_breakdown = calculate_total_price(car['price'], shipping_option)
     with st.container(border=True):
         col1, col2 = st.columns([1, 2])
@@ -76,16 +72,11 @@ def display_chat_interface():
     st.subheader("💬 Chat with our Sales Team")
     for msg in st.session_state.chat_messages:
         st.chat_message(msg["role"]).write(msg["content"])
-    
-    if st.session_state.get('human_requested'):
-        st.info("A human sales representative has been notified and will join the chat shortly.")
-
     if st.session_state.get('generate_invoice_request'):
         html_invoice = generate_html_invoice(st.session_state.car_in_chat, st.session_state.customer_info, st.session_state.shipping_option)
         st.info("Your invoice is ready below. Use your browser's print option (Ctrl+P or Cmd+P) to save it as a PDF.")
         st.markdown(html_invoice, unsafe_allow_html=True)
         st.session_state.generate_invoice_request = False
-        
     if prompt := st.chat_input("Ask a question or type 'start over'..."):
         st.session_state.chat_messages.append({"role": "user", "content": prompt})
         bot_response = get_bot_response(prompt)
@@ -95,20 +86,45 @@ def display_chat_interface():
 # --- MAIN APPLICATION ---
 def main():
     st.set_page_config(page_title=PAGE_TITLE, page_icon=PAGE_ICON, layout="wide", initial_sidebar_state="expanded")
+    
+    st.title(f"{PAGE_ICON} {PAGE_TITLE}")
 
-    # Initialize all session state keys
+    ### NEW DEBUGGING STEP ###
+    # This block will tell us exactly which files the application can see.
+    st.subheader("File & Directory Check (Debugging)")
+    try:
+        # Get the current working directory
+        cwd = os.getcwd()
+        st.write(f"Current Working Directory: `{cwd}`")
+        
+        # List all files and directories in the current directory
+        files_in_repository = os.listdir(cwd)
+        st.write("Files found in this directory:")
+        st.code('\n'.join(files_in_repository))
+        
+        # Check specifically for our needed files
+        if 'inventory.csv' in files_in_repository:
+            st.success("✅ `inventory.csv` IS FOUND!")
+        else:
+            st.error("❌ `inventory.csv` IS NOT FOUND in the list above.")
+            st.info("Please ensure the file is named exactly `inventory.csv` (all lowercase) and is in the main directory of your GitHub repository.")
+
+    except Exception as e:
+        st.error(f"Could not list files. Error: {e}")
+    st.markdown("---")
+    # ### END DEBUGGING STEP ###
+
+
+    # Initialize session state
     state_keys = {
         'current_car_index': 0, 'customer_info': {}, 'active_filters': {},
         'offer_placed': False, 'chat_messages': [], 'car_in_chat': {},
         'generate_invoice_request': False, 'invoice_request_pending': False,
-        'shipping_option': 'FOB', 'last_offer': 0, 'reservation_time': None,
-        'human_requested': False
+        'shipping_option': 'FOB'
     }
     for key, default_value in state_keys.items():
         if key not in st.session_state:
             st.session_state[key] = default_value
-
-    st.title(f"{PAGE_ICON} {PAGE_TITLE}")
     
     inventory = load_inventory()
     if inventory.empty:
