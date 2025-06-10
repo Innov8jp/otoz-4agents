@@ -1,4 +1,4 @@
-# app.py (Version with PDF generation temporarily removed)
+# app.py (Final Modular Version)
 
 import streamlit as st
 import traceback
@@ -6,7 +6,7 @@ import pandas as pd
 from config import *
 from utils import *
 
-# --- UI FUNCTIONS ---
+# --- UI FUNCTIONS (These functions control the layout of the app) ---
 def user_info_form():
     with st.sidebar:
         st.header("Your Information")
@@ -71,9 +71,11 @@ def display_chat_interface():
     st.subheader("💬 Chat with our Sales Team")
     for msg in st.session_state.chat_messages:
         st.chat_message(msg["role"]).write(msg["content"])
-    
-    # NOTE: PDF download button logic is removed.
-    
+    if st.session_state.get('generate_invoice_request'):
+        html_invoice = generate_html_invoice(st.session_state.car_in_chat, st.session_state.customer_info, st.session_state.shipping_option)
+        st.info("Your invoice is ready below. Use your browser's print option (Ctrl+P or Cmd+P) to save it as a PDF.")
+        st.markdown(html_invoice, unsafe_allow_html=True)
+        st.session_state.generate_invoice_request = False
     if prompt := st.chat_input("Ask a question or type 'start over'..."):
         st.session_state.chat_messages.append({"role": "user", "content": prompt})
         bot_response = get_bot_response(prompt)
@@ -86,7 +88,9 @@ def main():
 
     state_keys = {
         'current_car_index': 0, 'customer_info': {}, 'active_filters': {},
-        'offer_placed': False, 'chat_messages': [], 'car_in_chat': {}
+        'offer_placed': False, 'chat_messages': [], 'car_in_chat': {},
+        'generate_invoice_request': False, 'invoice_request_pending': False,
+        'shipping_option': 'FOB'
     }
     for key, default_value in state_keys.items():
         if key not in st.session_state:
@@ -101,19 +105,23 @@ def main():
     user_info_form()
     car_filters(inventory)
     
+    if st.session_state.active_filters:
+        active_filter_str = " | ".join([f"{k.split('_')[0].title()}: {v}" for k,v in st.session_state.active_filters.items() if v != 'All' and not isinstance(v, (int, float))])
+        st.info(f"**Active Filters:** {active_filter_str if active_filter_str else 'Showing all vehicles.'}")
+
+    filtered_inventory = filter_inventory(inventory, st.session_state.active_filters)
+    if filtered_inventory.empty:
+        st.warning("No vehicles match your current filters. Please adjust your criteria and click 'Show Results'."); return
+
+    if st.session_state.current_car_index >= len(filtered_inventory): st.session_state.current_car_index = 0
+    
     if st.session_state.offer_placed:
         st.markdown("---")
         st.markdown(f"### Continuing your offer for:")
         display_car_card(pd.Series(st.session_state.car_in_chat), st.session_state.shipping_option)
         display_chat_interface()
     else:
-        filtered_inventory = filter_inventory(inventory, st.session_state.active_filters)
-        if filtered_inventory.empty:
-            st.warning("No vehicles match your current filters. Please adjust your criteria and click 'Show Results'."); return
-
-        if st.session_state.current_car_index >= len(filtered_inventory): st.session_state.current_car_index = 0
         current_car = filtered_inventory.iloc[st.session_state.current_car_index]
-        
         st.markdown("---")
         st.markdown(f"#### Showing Vehicle {st.session_state.current_car_index + 1} of {len(filtered_inventory)}")
         shipping_option = st.radio("Shipping Option", ["FOB", "C&F", "CIF"], horizontal=True, key="shipping_option_main")
@@ -136,10 +144,4 @@ def main():
                 st.session_state.current_car_index = (st.session_state.current_car_index + 1) % len(filtered_inventory)
                 st.rerun()
 
-# --- SCRIPT ENTRY POINT ---
-if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        st.error("A critical error occurred. Please contact support.")
-        st.code(traceback.format_exc())
+# --- SCRIPT ENTRY POINT
