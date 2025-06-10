@@ -41,44 +41,45 @@ DEFAULT_CURRENCY = "JPY"
 
 # =====================================================================================
 # 3. Sidebar: Profile, Filters, Currency
-# =====================================================================================
 with st.sidebar:
     st.title("Lead Profile 📋")
-    # Reset session on new start
-    if st.button("Start Chat"):  # clear all except cached
+    # Start chat or reset
+    if st.button("Start Chat"):
         for k in list(st.session_state.keys()):
-            if not k.startswith("compute_"):
-                del st.session_state[k]
+            if k not in ("inventory_df",): del st.session_state[k]
         st.session_state.chat_started = True
         st.session_state.history = []
     if st.session_state.get("chat_started"):
-        # User info
+        st.subheader("Your Details")
         st.session_state.user_name = st.text_input("Name", st.session_state.get("user_name", ""))
         st.session_state.user_email = st.text_input("Email", st.session_state.get("user_email", ""))
         st.session_state.user_country = st.text_input("Country", st.session_state.get("user_country", ""))
         st.markdown("---")
-        # Budget and currency
-        st.session_state.budget = st.slider("Budget (JPY)", 500_000, 15_000_000,
-                                           st.session_state.get("budget", (1_000_000, 5_000_000)))
+        st.subheader("Budget & Currency")
+        st.session_state.budget = st.slider(
+            "Budget (JPY)", 500_000, 15_000_000,
+            st.session_state.get("budget", (1_000_000, 5_000_000))
+        )
+        # currency selector with index
         curr_opts = list(CURRENCIES.keys())
-        default_idx = curr_opts.index(st.session_state.get("currency", DEFAULT_CURRENCY))
-        st.session_state.currency = st.selectbox("Currency", curr_opts, index=default_idx)
+        idx = curr_opts.index(st.session_state.get("currency", DEFAULT_CURRENCY))
+        st.session_state.currency = st.selectbox("Currency", curr_opts, index=idx)
         st.markdown("---")
-        # Vehicle Filters
-        st.header("Filters 🔎")
-        makes = [""] + sorted(st.session_state.inventory_df['make'].unique() if 'inventory_df' in st.session_state else [])
+        st.subheader("Filters 🔎")
+        makes = [""] + sorted(st.session_state.inventory_df['make'].unique())
         st.session_state.filters_make = st.selectbox("Make", makes)
-        years = st.slider("Year Range", 2015, 2025,
-                             st.session_state.get("filters_year", (2018,2022)))
-        st.session_state.filters_year = years
+        st.session_state.filters_year = st.slider(
+            "Year Range", 2015, 2025,
+            st.session_state.get("filters_year", (2018, 2022))
+        )
         st.markdown("---")
         if st.button("Apply Filters & Show Deals", use_container_width=True):
-            st.session_state.history.append({"role":"assistant","content":"Applying filters and fetching deals..."})
+            handle_user_message("show deals")
+            st.experimental_rerun()
     else:
-        st.info("Click 'Start Chat' to begin your session.")
+        st.info("Click 'Start Chat' to begin")
 
-# =====================================================================================
-# 4. Load & Cache Inventory + Market Data
+# 4. Load & Cache Inventory + Market Data + Market Data
 # =====================================================================================
 @st.cache_data
 def load_inventory(path='Inventory Agasta.csv'):
