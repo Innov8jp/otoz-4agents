@@ -1,5 +1,5 @@
 # ==============================================================================  
-# FINAL, ALL-IN-ONE PRODUCTION SCRIPT (Chat Ready + QA + Admin UI)
+# FINAL, ALL-IN-ONE PRODUCTION SCRIPT (Chat + Offer Per Car + QA + Admin UI)
 # ==============================================================================  
 
 # --- SECTION 1: IMPORTS ---  
@@ -104,58 +104,37 @@ def generate_invoice_html(cust,car,bd):
             f"<table border='1'><tr><th>Item</th><th>Amount (JPY)</th></tr>{rows}</table>"
             "</body></html>")
 
-# --- SECTION 6: STREAMLIT ADMIN QA MODE ---
-if 'admin_qa' in st.session_state or st.sidebar.checkbox("Admin QA Mode"):
-    st.title("🔍 QA Test Interface")
-    st.markdown("This section runs invoice QA tests inside the app.")
+# --- SECTION 6: VEHICLE LISTING & CHAT ---
+df = load_data(INVENTORY_FILE_PATH)
+if df is not None:
+    st.title("🚗 Vehicle Listings")
+    for _, car in df.iterrows():
+        with st.container(border=True):
+            st.image(car['image_url'], width=300)
+            st.subheader(f"{car['year']} {car['make']} {car['model']}")
+            st.write(f"Mileage: {car['mileage']} km")
+            st.write(f"Price: ¥{car['price']:,}")
+            if st.button(f"💬 Place Offer / Ask About This Car", key=f"btn_{car['id']}"):
+                st.session_state['selected_car'] = car.to_dict()
+                st.rerun()
 
-    test_customers = [
-        {},
-        {"email": "test@example.com"},
-        {"name": "Asif"},
-        {"name": "Asif", "email": "asif@example.com"}
-    ]
-
-    test_car = {
-        "make": "Toyota",
-        "model": "Corolla",
-        "year": 2020,
-        "price": 1500000
-    }
-
-    breakdown = calculate_total_price(test_car["price"], "CIF")
-
-    for i, cust in enumerate(test_customers, 1):
-        st.subheader(f"Test Case {i}")
-        if breakdown:
-            try:
-                html = generate_invoice_html(cust, test_car, breakdown)
-                st.success(f"✅ Passed for customer: {cust}")
-                with st.expander("Show Invoice Preview"):
-                    st.components.v1.html(html, height=300)
-            except Exception as e:
-                st.error(f"❌ Failed with error: {e}")
-        else:
-            st.warning("Breakdown calculation failed. Check input price.")
-
-# --- SECTION 7: PLACE OFFER & CHAT LAUNCH ---
-if st.sidebar.button("Place Offer / Launch Chat"):
+# --- SECTION 7: LAUNCH CHAT IF CAR SELECTED ---
+if "selected_car" in st.session_state:
+    selected = st.session_state['selected_car']
     customer = st.session_state.get("customer_info", {})
-    if not customer.get("name") or not customer.get("email"):
-        st.error("Please complete your information before proceeding.")
-        st.write("Customer Info Debug:", customer)
-    else:
-        st.success("✅ Customer info verified. Launching chat...")
-        st.markdown("💬 *Welcome to Sparky Chat! Please tell us your offer or ask anything about the vehicle.*")
 
+    st.title(f"Chat for {selected['year']} {selected['make']} {selected['model']}")
+    st.image(selected['image_url'], width=300)
+    if not customer.get("name") or not customer.get("email"):
+        st.warning("⚠️ Please complete your information to begin chat.")
+    else:
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = []
 
         user_input = st.chat_input("Ask Sparky...")
         if user_input:
             st.session_state.chat_history.append(("user", user_input))
-            # Very basic intent echo for now — replace with real NLP later
-            st.session_state.chat_history.append(("sparky", f"You asked: '{user_input}' — we'll process that soon!"))
+            st.session_state.chat_history.append(("sparky", f"You asked about the {selected['year']} {selected['make']} {selected['model']}. We'll get back with details soon!"))
 
         for speaker, msg in st.session_state.chat_history:
             if speaker == "user":
