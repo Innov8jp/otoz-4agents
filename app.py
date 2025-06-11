@@ -1,160 +1,200 @@
-# ==============================================================================
-# FINAL, ALL-IN-ONE PRODUCTION SCRIPT (Chat + Offer Per Car + Filters + Price Details + QA)
-# ==============================================================================
-
-# --- SECTION 1: IMPORTS ---
-try:
-    import streamlit as st
-except ModuleNotFoundError:
-    raise ImportError("The 'streamlit' module is not installed. Install via: pip install streamlit")
-
-import pandas as pd
-import random
 import os
-from datetime import datetime
-from pandas.tseries.offsets import DateOffset
-import json
+import re
+import csv
+import io
+import random
+import requests
+import streamlit as st
+import pandas as pd
 import altair as alt
+from datetime import datetime
+try:
+    from fpdf import FPDF
+    ENABLE_PDF = True
+except ImportError:
+    ENABLE_PDF = False
 
-# Patch for rerun compatibility
-if not hasattr(st, "rerun") and hasattr(st, "experimental_rerun"):
-    st.rerun = st.experimental_rerun
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. Top-level config (only once!)
+st.set_page_config(
+    page_title="Sparky - AI Sales Assistant",
+    page_icon="🚗",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# --- SECTION 2: GLOBAL SETTINGS ---
-st.set_page_config(page_title="Sparky - AI Transaction Manager", page_icon="🚗", layout="wide")
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. Fetch dynamic FX rates (cached)
+@st.cache_data(ttl=3600)
+def get_currency_rates(base="JPY"):
+    try:
+        r = requests.get(f"https://api.exchangerate.host/latest?base={base}", timeout=5)
+        return r.json().get("rates", {"JPY":1})
+    except:
+        return {"JPY":1, "USD":1/155, "PKR":1/0.55}
 
-INVENTORY_FILE_PATH = 'inventory.csv'
-INTENTS_FILE_PATH = 'intents.json'
+CURRENCIES = get_currency_rates()
+DEFAULT_CURRENCY = "JPY"
 
-PORTS_BY_COUNTRY = {
-    "Australia": ["Melbourne", "Sydney"], "Canada": ["Vancouver"], "Kenya": ["Mombasa"],
-    "New Zealand": ["Auckland"], "Pakistan": ["Karachi"], "Tanzania": ["Dar es Salaam"],
-    "United Arab Emirates": ["Jebel Ali (Dubai)"], "United Kingdom": ["Southampton"]
-}
-
-DOMESTIC_TRANSPORT = 50_000
-FREIGHT_COST = 150_000
-INSURANCE_RATE = 0.025
-
-JAPAN_MAKERS = {
-    "Toyota": ["Corolla", "Camry", "Aqua"],
-    "Honda": ["Civic", "Fit", "Vezel"],
-    "Nissan": ["Note", "Serena", "X-Trail"]
-}
-GERMANY_MAKERS = {
-    "BMW": ["3 Series", "5 Series", "X1"],
-    "Mercedes": ["C-Class", "E-Class", "GLA"],
-    "Volkswagen": ["Golf", "Passat", "Tiguan"]
-}# --- SECTION 3: DATA LOADING ---
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. Load inventory (CSV or dummy) BEFORE sidebar
 @st.cache_data
-def load_data(path):
-    if not os.path.exists(path):
-        st.error(f"File not found: {path}")
-        return None
-    df = pd.read_csv(path)
-    if 'image_url' not in df.columns:
-        df['image_url'] = df.apply(lambda r: f"https://placehold.co/600x400?text={r.make}+{r.model}", axis=1)
-    if 'id' not in df.columns:
-        df.reset_index(inplace=True)
-        df['id'] = df['index'].apply(lambda i: f"VID{i:04d}")
-    return df
+def load_inventory(path="Inventory Agasta.csv"):
+    if os.path.exists(path):
+        try:
+            df = pd.read_csv(path)
+            df.columns = [c.lower() for c in df.columns]
+            return df
+        except:
+            pass
+    # Fallback dummy inventory
+    makes = ["Toyota","Honda","Nissan"]
+    records = []
+    for _ in range(500):
+        mk = random.choice(makes)
+        records.append({
+            "make": mk,
+            "model": random.choice(["Corolla","Civic","Altima"]),
+            "year": random.randint(2015,2025),
+            "price": random.randint(500_000,5_000_000),
+            "mileage": random.randint(5_000,150_000),
+            "fuel": "Petrol",
+            "transmission": "Automatic",
+            "color": "White",
+            "grade": "S",
+            "location": "Tokyo",
+            "id": f"ID{random.randint(1000,9999)}"
+        })
+    return pd.DataFrame(records)
 
-@st.cache_data
-def simulate_price_history(df):
-    hist = []
-    today = pd.to_datetime(datetime.now())
-    for _, r in df.iterrows():
-        base = r['price']
-        for m in range(1, 7):
-            dt = today - DateOffset(months=m)
-            price = int(base * (0.995**m) * (1 + random.uniform(-0.05, 0.05)))
-            hist.append({'id': r['id'], 'make': r['make'], 'model': r['model'], 'date': dt, 'avg_price': price})
-    return pd.DataFrame(hist)
+st.session_state.inventory_df = load_inventory()
 
-def calculate_total_price(base, opt):
-    if not isinstance(base, (int, float)):
-        return None
-    bd = {'base_price': base, 'domestic_transport': 0, 'freight_cost': 0, 'insurance': 0}
-    if opt in ['FOB', 'C&F', 'CIF']: bd['domestic_transport'] = DOMESTIC_TRANSPORT
-    if opt in ['C&F', 'CIF']: bd['freight_cost'] = FREIGHT_COST
-    if opt == 'CIF': bd['insurance'] = (base + bd['freight_cost']) * INSURANCE_RATE
-    bd['total_price'] = sum(bd.values())
-    return bd
-
-def generate_invoice_html(cust, car, bd):
-    name = cust.get('name', 'Unknown')
-    email = cust.get('email', 'unknown@example.com')
-    rows = f"<tr><td>{car['year']} {car['make']} {car['model']}</td><td>{bd['base_price']:,}</td></tr>"
-    if bd['domestic_transport']: rows += f"<tr><td>Domestic Transport</td><td>{bd['domestic_transport']:,}</td></tr>"
-    if bd['freight_cost']: rows += f"<tr><td>Freight Cost</td><td>{bd['freight_cost']:,}</td></tr>"
-    if bd['insurance']: rows += f"<tr><td>Insurance</td><td>{int(bd['insurance']):,}</td></tr>"
-    rows += f"<tr><td><strong>Total</strong></td><td><strong>{bd['total_price']:,}</strong></td></tr>"
-    return ("<html><body>"
-            f"<h2>Invoice</h2><p>Date: {datetime.now().date()}</p>"
-            f"<p>Customer: {name} &lt;{email}&gt;</p>"
-            f"<table border='1'><tr><th>Item</th><th>Amount (JPY)</th></tr>{rows}</table>"
-            "</body></html>")
-
-# --- SECTION 4: MAIN APP UI ---
-df = load_data(INVENTORY_FILE_PATH)
-history_df = simulate_price_history(df) if df is not None else pd.DataFrame()
-
-if df is not None:
-    st.sidebar.title("🔧 Search Filters")
-    country = st.sidebar.selectbox("Country of Origin", ["All", "Japan", "Germany"])
-    makers = []
-    if country == "Japan":
-        makers = list(JAPAN_MAKERS.keys())
-    elif country == "Germany":
-        makers = list(GERMANY_MAKERS.keys())
-    all_makers = sorted(set(df["make"]))
-    selected_maker = st.sidebar.selectbox("Make", ["All"] + makers if makers else ["All"] + all_makers)
-    
-    models = []
-    if country == "Japan" and selected_maker in JAPAN_MAKERS:
-        models = JAPAN_MAKERS[selected_maker]
-    elif country == "Germany" and selected_maker in GERMANY_MAKERS:
-        models = GERMANY_MAKERS[selected_maker]
-    elif selected_maker != "All":
-        models = sorted(df[df["make"] == selected_maker]["model"].unique())
-
-    selected_model = st.sidebar.selectbox("Model", ["All"] + models if models else ["All"])
-    country_for_shipping = st.sidebar.selectbox("Shipping Destination", list(PORTS_BY_COUNTRY.keys()))
-    selected_port = st.sidebar.selectbox("Port", PORTS_BY_COUNTRY[country_for_shipping])
-    shipping_method = st.sidebar.selectbox("Shipping Method", ["FOB", "C&F", "CIF"])
-
-    filtered_df = df.copy()
-    if selected_maker != "All":
-        filtered_df = filtered_df[filtered_df["make"] == selected_maker]
-    if selected_model != "All":
-        filtered_df = filtered_df[filtered_df["model"] == selected_model]
-
-    st.title("🚗 Available Cars")
-    for _, car in filtered_df.iterrows():
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. Sidebar: Onboarding, Profile, Budget & Filters
+with st.sidebar:
+    st.title("Lead Profile 📋")
+    if st.button("Start Chat", use_container_width=True):
+        # Clear all except inventory
+        keys = list(st.session_state.keys())
+        for k in keys:
+            if k not in ("_mutations","inventory_df"):
+                del st.session_state[k]
+        st.session_state.chat_started = True
+        st.session_state.history = []
+    if st.session_state.get("chat_started"):
+        st.subheader("Your Details")
+        st.session_state.user_name   = st.text_input("Name", st.session_state.get("user_name",""))
+        st.session_state.user_email  = st.text_input("Email", st.session_state.get("user_email",""))
+        st.session_state.user_country= st.text_input("Country", st.session_state.get("user_country",""))
+        if st.button("Save Profile", use_container_width=True):
+            st.success("Profile saved!")
         st.markdown("---")
-        col1, col2 = st.columns([1, 2])
-        with col1:
-            st.image(car['image_url'], width=260)
-        with col2:
-            st.subheader(f"{car['year']} {car['make']} {car['model']}")
-            st.write(f"Mileage: {car['mileage']} km")
-            st.write(f"Base Price: ¥{car['price']:,}")
-            chart_df = history_df[history_df['id'] == car['id']]
-            if not chart_df.empty:
-                chart = alt.Chart(chart_df).mark_line(point=True).encode(
-                    x='date:T', y='avg_price:Q'
-                ).properties(height=140)
-                st.altair_chart(chart, use_container_width=True)
-            with st.expander("📦 View Price Details (FOB / C&F / CIF)"):
-                bd = calculate_total_price(car['price'], shipping_method)
-                if bd:
-                    st.write(f"Base Price: ¥{bd['base_price']:,}")
-                    if bd['domestic_transport']: st.write(f"Domestic Transport: ¥{bd['domestic_transport']:,}")
-                    if bd['freight_cost']: st.write(f"Freight Cost: ¥{bd['freight_cost']:,}")
-                    if bd['insurance']: st.write(f"Insurance: ¥{int(bd['insurance']):,}")
-                    st.markdown(f"**Total Price ({shipping_method}): ¥{bd['total_price']:,}**")
-            if st.button("💬 Place Offer / Ask About This Car", key=f"btn_{car['id']}"):
-                st.session_state['selected_car'] = car.to_dict()
-                if "customer_info" not in st.session_state:
-                    st.session_state['customer_info'] = {"name": "", "email": ""}
-                st.rerun()
+        st.subheader("Budget & Currency")
+        st.session_state.budget = st.slider(
+            "Budget (JPY)", 500_000, 15_000_000,
+            st.session_state.get("budget",(1_000_000,5_000_000)), step=100_000
+        )
+        curr_opts = list(CURRENCIES.keys())
+        idx = curr_opts.index(st.session_state.get("currency", DEFAULT_CURRENCY))
+        st.session_state.currency = st.selectbox("Currency", curr_opts, index=idx)
+        st.markdown("---")
+        st.subheader("Filters 🔎")
+        makes = [""] + sorted(st.session_state.inventory_df["make"].unique())
+        st.session_state.filters_make = st.selectbox("Make", makes)
+        st.session_state.filters_year = st.slider(
+            "Year Range", 2015, 2025,
+            st.session_state.get("filters_year",(2018,2022))
+        )
+        if st.button("Apply Filters & Show Deals", use_container_width=True):
+            handle_user_message("show deals")
+            st.experimental_rerun()
+    else:
+        st.info("Click 'Start Chat' to begin your session.")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 5. Session state init
+st.session_state.setdefault("history", [])
+st.session_state.setdefault("negotiation", None)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6. Fetch & filter helper
+@st.cache_data
+def fetch_inventory(make, year):
+    df = st.session_state.inventory_df
+    return df[(df.make.str.lower()==make.lower()) & (df.year==year)]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 7. Chat UI
+chat = st.container()
+if st.session_state.get("chat_started"):
+    with chat:
+        # Render history
+        for msg in st.session_state.history:
+            avatar = None if msg["role"]=="user" else "🚗"
+            with st.chat_message(msg["role"], avatar=avatar):
+                st.markdown(msg["content"])
+        # Input form
+        with st.form("chat_form", clear_on_submit=True):
+            user_input = st.text_input("Your message...")
+            send = st.form_submit_button("Send")
+        if send:
+            handle_user_message(user_input)
+else:
+    chat.info("Your chat will appear here once you start.")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8. Handler: intents & responses
+def handle_user_message(text):
+    text = text.strip()
+    lc = text.lower()
+    st.session_state.history.append({"role":"user","content":text})
+
+    # Show Deals
+    if lc=="show deals":
+        df = st.session_state.inventory_df
+        mk = st.session_state.filters_make
+        if mk: df = df[df.make==mk]
+        y0,y1 = st.session_state.filters_year
+        df = df[(df.year>=y0)&(df.year<=y1)]
+        st.session_state.history.append({"role":"assistant","content":f"Found {len(df)} deals. First 3:"})
+        for _,c in df.head(3).iterrows():
+            price = int(c.price * CURRENCIES[st.session_state.currency])
+            st.session_state.history.append({"role":"assistant","content":f"{c.make} {c.model} ({c.year}) – {st.session_state.currency} {price:,}"})
+        return
+
+    # Contact Support
+    if lc=="contact support":
+        email = st.session_state.get("user_email","sales@otoz.ai")
+        st.session_state.history.append({"role":"assistant","content":f"Email us at {email}"})
+        return
+
+    # Inventory lookup
+    m = re.search(r"(\w+)\s*(\d{4})", text)
+    if m and m.group(1).capitalize() in st.session_state.inventory_df.make.unique():
+        make,year = m.group(1).capitalize(),int(m.group(2))
+        st.session_state.history.append({"role":"assistant","content":f"Looking up {make} {year}…"})
+        cars = fetch_inventory(make,year)
+        if not cars.empty:
+            # Chart with correct currency scaling
+            recs = st.session_state.inventory_df[st.session_state.inventory_df.make==make]
+            chart_df = recs.groupby("year").price.mean().reset_index()
+            chart_df["display"] = chart_df.price * CURRENCIES[st.session_state.currency]
+            st.altair_chart(alt.Line(chart_df, x="year", y="display"), use_container_width=True)
+            c = cars.iloc[0]
+            st.image(f"https://dummyimage.com/200x100/000/fff&text={make}+{year}", width=200)
+            st.write(f"**{year} {make} {c.model}**")
+            st.write(f"Price: {st.session_state.currency} {int(c.price*CURRENCIES[st.session_state.currency]):,}")
+        else:
+            st.session_state.history.append({"role":"assistant","content":"No listings found."})
+        return
+
+    # Fallback
+    st.session_state.history.append({"role":"assistant","content":"Try 'show deals' or 'contact support'."})
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 9. Transcript download
+if st.button("Download Chat Transcript"):
+    txt = "\n".join(f"{m['role']}: {m['content']}" for m in st.session_state.history)
+    st.download_button("Download Transcript", txt, "chat.txt", "text/plain")
+
+# End of script
