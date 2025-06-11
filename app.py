@@ -1,5 +1,5 @@
 # ==============================================================================  
-# FINAL, ALL-IN-ONE PRODUCTION SCRIPT (Chat + Offer Per Car + QA + Admin UI)
+# FINAL, ALL-IN-ONE PRODUCTION SCRIPT (Chat + Offer Per Car + QA + Admin UI + Cards + Graph)
 # ==============================================================================  
 
 # --- SECTION 1: IMPORTS ---  
@@ -24,6 +24,7 @@ if not hasattr(st, "rerun") and hasattr(st, "experimental_rerun"):
     st.rerun = st.experimental_rerun
 
 # --- SECTION 2: GLOBAL SETTINGS ---  
+st.set_page_config(page_title="Sparky - AI Transaction Manager", page_icon="🚗", layout="wide")
 PAGE_TITLE = "Sparky - AI Transaction Manager"  
 PAGE_ICON = "🚗"  
 INVENTORY_FILE_PATH = 'inventory.csv'  
@@ -66,7 +67,7 @@ def simulate_price_history(df):
         for m in range(1,7):  
             dt = today - DateOffset(months=m)  
             price = int(base * (0.995**m) * (1 + random.uniform(-0.05,0.05)))  
-            hist.append({'make':r['make'],'model':r['model'],'date':dt,'avg_price':price})  
+            hist.append({'id': r['id'], 'make':r['make'],'model':r['model'],'date':dt,'avg_price':price})  
     return pd.DataFrame(hist)  
 
 # --- SECTION 4: INTENTS LOADING ---  
@@ -104,21 +105,39 @@ def generate_invoice_html(cust,car,bd):
             f"<table border='1'><tr><th>Item</th><th>Amount (JPY)</th></tr>{rows}</table>"
             "</body></html>")
 
-# --- SECTION 6: VEHICLE LISTING & CHAT ---
+# --- SECTION 6: VEHICLE LISTING & CHART ---
 df = load_data(INVENTORY_FILE_PATH)
+history_df = simulate_price_history(df) if df is not None else pd.DataFrame()
+
 if df is not None:
+    st.sidebar.title("🔍 Filters")
+    makes = ["All"] + sorted(df["make"].unique())
+    selected_make = st.sidebar.selectbox("Select Make", makes)
+
+    filtered_df = df.copy()
+    if selected_make != "All":
+        filtered_df = df[df["make"] == selected_make]
+
     st.title("🚗 Vehicle Listings")
-    for _, car in df.iterrows():
-        with st.container(border=True):
-            st.image(car['image_url'], width=300)
+    for _, car in filtered_df.iterrows():
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            st.image(car['image_url'], width=240)
+        with col2:
             st.subheader(f"{car['year']} {car['make']} {car['model']}")
             st.write(f"Mileage: {car['mileage']} km")
             st.write(f"Price: ¥{car['price']:,}")
-            if st.button(f"💬 Place Offer / Ask About This Car", key=f"btn_{car['id']}"):
+            chart_df = history_df[history_df['id'] == car['id']]
+            if not chart_df.empty:
+                chart = alt.Chart(chart_df).mark_line(point=True).encode(
+                    x='date:T', y='avg_price:Q'
+                ).properties(height=150)
+                st.altair_chart(chart, use_container_width=True)
+            if st.button("💬 Place Offer / Ask About This Car", key=f"btn_{car['id']}"):
                 st.session_state['selected_car'] = car.to_dict()
                 st.rerun()
 
-# --- SECTION 7: LAUNCH CHAT IF CAR SELECTED ---
+# --- SECTION 7: CHAT ---
 if "selected_car" in st.session_state:
     selected = st.session_state['selected_car']
     customer = st.session_state.get("customer_info", {})
