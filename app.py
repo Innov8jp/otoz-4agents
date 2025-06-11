@@ -16,7 +16,7 @@ import re
 import altair as alt  
 
 # --- SECTION 2: GLOBAL SETTINGS ---  
-PAGE_TITLE = "Sparky - AI Sales Assistant"  
+PAGE_TITLE = "Sparky - AI Transaction Manager"  
 PAGE_ICON = "🚗"  
 INVENTORY_FILE_PATH = 'inventory.csv'  
 INTENTS_FILE_PATH = 'intents.json'  
@@ -153,13 +153,14 @@ def display_car_card(car,opt):
 def display_market_data_chart(hist,make,model):  
     df = hist[(hist['make']==make)&(hist['model']==model)]  
     if df.empty: return  
-    # default collapsed expander  
-    exp = st.expander("6-Month Price Trend (click to expand)", expanded=False)  
-    with exp:  
-        chart = alt.Chart(df).mark_line(point=True).encode(x='date:T', y='avg_price:Q', tooltip=['date','avg_price'])  
+    # checkbox to toggle chart visibility  
+    if st.checkbox("Show 6-Month Price Trend", key=f"chart_toggle_{make}_{model}"):  
+        chart = alt.Chart(df).mark_line(point=True).encode(  
+            x='date:T', y='avg_price:Q', tooltip=['date','avg_price']  
+        ).properties(title=f"6-Month Trend for {make} {model}")  
         st.altair_chart(chart, use_container_width=True)  
 
-# --- SECTION 9: MAIN ---  
+# --- SECTION 9: MAIN --- ---  
 def main():  
     st.set_page_config(page_title=PAGE_TITLE, page_icon=PAGE_ICON, layout='wide')  
     # init state  
