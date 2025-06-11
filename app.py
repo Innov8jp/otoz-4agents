@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
+import json
 from datetime import datetime
-import io
 import requests
 from bs4 import BeautifulSoup
 
@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 PAGE_TITLE = "Sparky - AI Sales Assistant"
 PAGE_ICON = "🚗"
 INVENTORY_FILE_PATH = 'inventory.csv'
+INTENTS_PATH = 'intents.json'
 PORTS = ['Tokyo', 'Yokohama', 'Osaka', 'Kobe', 'Nagoya']
 PRICE_TYPES = ['FOB', 'C&F', 'CIF']
 
@@ -31,13 +32,30 @@ def load_inventory(path: str) -> pd.DataFrame:
             df['image_urls'] = [[] for _ in range(len(df))]
     return df
 
+@st.cache_data
+def load_intents(path: str) -> dict:
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        st.error(f"Error loading intents: {e}")
+        return {'intents': []}
+
+# --- INTENT MATCHING ---
+def match_intent(message: str, intents: dict) -> str:
+    msg = message.lower()
+    for item in intents.get('intents', []):
+        for pat in item.get('patterns', []):
+            if pat.lower() in msg:
+                return item.get('responses', ["I'm not sure I understand."])[0]
+    return "I didn't get that. Could you rephrase?"
+
 # --- MARKET DATA SCRAPING ---
 @st.cache_data
 def fetch_market_prices(make: str, model: str) -> pd.Series:
     try:
         url = f"https://www.beforward.jp/catalog/{make}/{model}/"
         resp = requests.get(url)
-        soup = BeautifulSoup(resp.text, 'html.parser')
         dates = pd.date_range(end=pd.Timestamp.today(), periods=6, freq='M')
         prices = pd.Series([1000000 + i*50000 for i in range(6)], index=dates)
         return prices
@@ -55,15 +73,9 @@ def calculate_breakdown(base: float, price_type: str, land: float, freight: floa
     return breakdown
 
 # --- RENDERING FUNCTIONS ---
-
 def show_price_trend(prices: pd.Series):
     df = prices.rename_axis('Date').reset_index(name='Price')
-    chart = alt.Chart(df).mark_line(point=True).encode(
-        x='Date:T',
-        y='Price:Q'
-    ).properties(
-        title='6-Month Market Price Trend'
-    )
+    chart = alt.Chart(df).mark_line(point=True).encode(x='Date:T', y='Price:Q').properties(title='6-Month Market Price Trend')
     st.altair_chart(chart, use_container_width=True)
 
 
@@ -81,10 +93,8 @@ def render_car_card(car: dict, selected_port: str, price_type: str):
     land_fee = 30000
     freight_fee = 300000
     breakdown = calculate_breakdown(base, price_type, land_fee, freight_fee)
-
     for label, amount in breakdown.items():
         st.markdown(f"**{label}:** ¥{int(amount):,}")
-
     st.markdown(f"**Mileage:** {car['mileage']:,} km")
 
     with st.expander("Market Comparison"):
@@ -98,44 +108,38 @@ def render_car_card(car: dict, selected_port: str, price_type: str):
     if st.button("Make Offer", key=f"btn_{car['id']}"):
         st.session_state.setdefault('offers', {})
         st.session_state['offers'][car['id']] = offer
-        st.success(f"Offer of ¥{offer:,} submitted for car {car['id']}")
+        st.success(f"Offer of ¥{offer:,} submitted.")
 
     if car['id'] in st.session_state.get('offers', {}):
         agreed = st.session_state['offers'][car['id']]
         if st.button("Confirm Deal & Generate Invoice", key=f"confirm_{car['id']}"):
             invoice_html = generate_html_invoice(car, agreed, breakdown)
-            st.download_button(
-                label="Download Invoice (HTML)",
-                data=invoice_html.encode('utf-8'),
-                file_name=f"invoice_car_{car['id']}.html",
-                mime='text/html'
-            )
+            st.download_button(label="Download Invoice (HTML)", data=invoice_html.encode('utf-8'), file_name=f"invoice_{car['id']}.html", mime='text/html')
 
 # --- INVOICE GENERATION ---
 def generate_html_invoice(car: dict, price: float, breakdown: dict) -> str:
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     rows = "".join(f"<tr><th>{k}</th><td>¥{int(v):,}</td></tr>" for k, v in breakdown.items())
     return f"""
-<html>
-<head><style>body{{font-family:Arial;}}table{{width:100%;border-collapse:collapse;}}th,td{{border:1px solid #ddd;padding:8px;}}th{{background:#f2f2f2;}}</style></head>
-<body>
-<h1>Invoice</h1><p>{now}</p>
-<h2>Seller</h2><p>Otoz.ai<br>Tokyo</p>
-<h2>Buyer</h2><p>{st.session_state.get('user_name','Customer')}</p>
-<h2>Car Details</h2><table>{rows}</table>
-</body>
-</html>
-"""
+<html><head><style>body{{font-family:Arial;}}table{{width:100%;border-collapse:collapse;}}th,td{{border:1px solid #ddd;padding:8px;}}th{{background:#f2f2f2;}}</style></head><body>
+<h1>Invoice</h1><p>{now}</p><h2>Seller</h2><p>Otoz.ai, Tokyo</p><h2>Buyer</h2><p>{st.session_state.get('user_name','Customer')}</p><h2>Car Details</h2><table>{rows}</table></body></html>"""
 
 # --- MAIN APPLICATION ---
 def main():
     st.set_page_config(page_title=PAGE_TITLE, page_icon=PAGE_ICON, layout='wide')
     st.title(PAGE_TITLE)
 
+    intents = load_intents(INTENTS_PATH)
     with st.sidebar:
-        st.header("User & Filters")
+        st.header("Chat with Sparky")
+        user_msg = st.text_input("You:")
+        if st.button("Send", key="send_chat") and user_msg:
+            reply = match_intent(user_msg, intents)
+            st.write(f"Sparky: {reply}")
+        st.markdown("---")
+        st.header("Filters & Settings")
         st.session_state['user_name'] = st.text_input("Your Name", value=st.session_state.get('user_name',''))
-        st.selectbox("Select Port", options=PORTS, key='port')
+        st.selectbox("Port", options=PORTS, key='port')
         st.radio("Price Type", options=PRICE_TYPES, key='price_type')
         df = load_inventory(INVENTORY_FILE_PATH)
         makes = sorted(df['make'].dropna().unique())
