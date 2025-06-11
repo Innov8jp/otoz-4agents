@@ -150,17 +150,20 @@ def display_car_card(car,opt):
         st.write(f"**Price:** ¥{car['price']:,}")  
         st.success(f"Total ({opt}): ¥{bd['total_price']:,}")  
 
-def display_market_data_chart(hist,make,model):  
+def display_market_data_chart(hist, make, model):  
     df = hist[(hist['make']==make)&(hist['model']==model)]  
-    if df.empty: return  
-    # checkbox to toggle chart visibility  
-    if st.checkbox("Show 6-Month Price Trend", key=f"chart_toggle_{make}_{model}"):  
+    if df.empty:  
+        return  
+    # Checkbox toggle for chart visibility (default False)  
+    toggle_key = f"show_chart_{make}_{model}".replace(" ","_")  
+    show_chart = st.checkbox("Show 6-Month Price Trend", value=False, key=toggle_key)  
+    if show_chart:  
         chart = alt.Chart(df).mark_line(point=True).encode(  
             x='date:T', y='avg_price:Q', tooltip=['date','avg_price']  
         ).properties(title=f"6-Month Trend for {make} {model}")  
         st.altair_chart(chart, use_container_width=True)  
 
-# --- SECTION 9: MAIN --- ---  
+# --- SECTION 9: MAIN --- --- ---  
 def main():  
     st.set_page_config(page_title=PAGE_TITLE, page_icon=PAGE_ICON, layout='wide')  
     # init state  
