@@ -150,24 +150,24 @@ def display_car_card(car,opt):
         st.write(f"**Price:** ¥{car['price']:,}")  
         st.success(f"Total ({opt}): ¥{bd['total_price']:,}")  
 
-def display_market_data_chart(df, make, model):  
-    filtered_data = df.query("make == @make and model == @model")  
-    if filtered_data.empty:  
-        return  
-    # Checkbox toggle for chart visibility (unchecked by default)  
-    toggle_key = f"show_chart_{make}_{model}".replace(" ", "_")  
-    show_chart = st.checkbox("Show 6-Month Price Trend", value=False, key=toggle_key)  
-    if show_chart:  
-        chart = (  
-            alt.Chart(filtered_data)  
-            .mark_line(point=True)  
-            .encode(  
-                x=alt.X('date:T', title='Date'),  
-                y=alt.Y('avg_price:Q', title='Average Price (JPY)'),  
-                tooltip=['date:T', 'avg_price:Q']  
-            )  
-            .properties(title=f"6-Month Trend for {make} {model}")  
-        )  
+def display_market_data_chart(df, make, model):
+    filtered_data = df.query("make == @make and model == @model")
+    if filtered_data.empty:
+        return
+    # Checkbox toggle for chart visibility (unchecked by default)
+    toggle_key = f"show_chart_{make}_{model}".replace(" ", "_")
+    show_chart = st.checkbox("Show 6-Month Price Trend", value=False, key=toggle_key)
+    if show_chart:
+        chart = (
+            alt.Chart(filtered_data)
+            .mark_line(point=True)
+            .encode(
+                x=alt.X('date:T', title='Date'),
+                y=alt.Y('avg_price:Q', title='Average Price (JPY)'),
+                tooltip=['date:T', 'avg_price:Q']
+            )
+            .properties(title=f"6-Month Trend for {make} {model}")
+        )
         st.altair_chart(chart, use_container_width=True)  
 
 # --- SECTION 9: MAIN --- --- ---  
