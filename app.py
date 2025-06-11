@@ -62,29 +62,39 @@ def simulate_price_history(df):
             })  
     return pd.DataFrame(hist)  
 
-def calculate_total_price(base,opt):  
-    bd={'base_price':base,'domestic_transport':0,'freight_cost':0,'insurance':0}  
-    if opt in ['FOB','C&F','CIF']: bd['domestic_transport']=DOMESTIC_TRANSPORT  
-    if opt in ['C&F','CIF']: bd['freight_cost']=FREIGHT_COST  
-    if opt=='CIF': bd['insurance']=(base+bd['freight_cost'])*INSURANCE_RATE  
-    bd['total_price']=sum(bd.values())  
-    return bd  
+# --- SECTION 4: LOAD INTENTS ONCE ---  
+@st.cache_data  
+def load_intents(path):  
+    try:  
+        with open(path,'r',encoding='utf-8') as f:  
+            data=json.load(f)  
+            return data.get('intents',[])  
+    except Exception:  
+        return []  
 
-def generate_invoice_html(cust,car,bd):  
-    rows=f"<tr><td>Vehicle {car['year']} {car['make']} {car['model']}</td><td>{bd['base_price']:,}</td></tr>"  
-    if bd['domestic_transport']: rows+=f"<tr><td>Domestic Transport</td><td>{bd['domestic_transport']:,}</td></tr>"  
-    if bd['freight_cost']: rows+=f"<tr><td>Freight</td><td>{bd['freight_cost']:,}</td></tr>"  
-    if bd['insurance']: rows+=f"<tr><td>Insurance</td><td>{int(bd['insurance']):,}</td></tr>"  
-    rows+=f"<tr><td><strong>Total</strong></td><td><strong>{bd['total_price']:,}</strong></td></tr>"  
-    return (  
-        f"<html><body>"  
-        f"<h2>Invoice</h2><p>Date: {datetime.now().date()}</p>"  
-        f"<p>Customer: {cust['name']} &lt;{cust['email']}&gt;</p>"  
-        f"<table border='1' cellpadding='5'><tr><th>Item</th><th>Amount</th></tr>{rows}</table>"  
-        f"</body></html>"  
-    )  
+# --- SECTION 5: CHATBOT & INVOICE LOGIC ---  
+def get_bot_response(inp):  
+    # Invoice trigger on agreement  
+    if 'i agree' in inp.lower():  
+        car=st.session_state['car_in_chat']  
+        bd=calculate_total_price(car['price'],st.session_state['shipping_option'])  
+        return generate_invoice_html(st.session_state['customer_info'],car,bd)  
 
-# --- SECTION 4: CHATBOT & INVOICE LOGIC ---  
+    intents=st.session_state.get('intents_data',[])  
+    if not intents:  
+        return "I'm sorry, the chat service is unavailable right now."  
+    patt={p.lower():it['tag'] for it in intents for p in it.get('patterns',[])}  
+    m=get_close_matches(inp.lower(),list(patt),n=1,cutoff=0.5)  
+    resp="Sorry, I didn't get that."  
+    if m:  
+        tag=patt[m[0]]  
+        for it in intents:  
+            if it.get('tag')==tag:  
+                resp=random.choice(it.get('responses',[]))  
+                break  
+    return resp  
+
+# --- SECTION 6: UI COMPONENTS ---  
 def get_bot_response(inp):  
     # invoice on agreement  
     if 'i agree' in inp.lower():  
@@ -142,6 +152,20 @@ def display_market_data_chart(hist,make,model):
 
 # --- SECTION 7: MAIN APPLICATION ---  
 def main():  
+    st.set_page_config(page_title=PAGE_TITLE,page_icon=PAGE_ICON,layout='wide')  
+    # init session_state defaults  
+    defaults={'current_car_index':0,'customer_info':{},'active_filters':{},'offer_placed':False,'chat_messages':[],'car_in_chat':{},'shipping_option':'FOB'}  
+    for k,v in defaults.items(): st.session_state.setdefault(k,v)  
+    # load intents once  
+    st.session_state['intents_data']=load_intents(INTENTS_FILE_PATH)  
+
+    inv=load_data(INVENTORY_FILE_PATH)  
+    if inv is None or inv.empty:  
+        st.error("No inventory loaded."); return  
+    hist=simulate_price_history(inv)
+
+    st.title(f"{PAGE_ICON} {PAGE_TITLE}")  
+    user_info_form()  
     st.set_page_config(page_title=PAGE_TITLE,page_icon=PAGE_ICON,layout='wide')  
     # init session_state defaults  
     defaults={'current_car_index':0,'customer_info':{},'active_filters':{},'offer_placed':False,'chat_messages':[],'car_in_chat':{},'shipping_option':'FOB'}  
