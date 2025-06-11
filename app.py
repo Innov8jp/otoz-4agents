@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import altair as alt
 from datetime import datetime
 import io
 import requests
@@ -34,13 +34,10 @@ def load_inventory(path: str) -> pd.DataFrame:
 # --- MARKET DATA SCRAPING ---
 @st.cache_data
 def fetch_market_prices(make: str, model: str) -> pd.Series:
-    """Scrape 6-month price data from beforward.jp"""
     try:
-        # Placeholder URL, actual scraping logic may vary
         url = f"https://www.beforward.jp/catalog/{make}/{model}/"
         resp = requests.get(url)
         soup = BeautifulSoup(resp.text, 'html.parser')
-        # Parse dates and prices; dummy example below
         dates = pd.date_range(end=pd.Timestamp.today(), periods=6, freq='M')
         prices = pd.Series([1000000 + i*50000 for i in range(6)], index=dates)
         return prices
@@ -54,19 +51,20 @@ def calculate_breakdown(base: float, price_type: str, land: float, freight: floa
         breakdown['Freight'] = freight
     if price_type == 'CIF':
         breakdown['Insurance'] = base * 0.01
-    total = sum(breakdown.values())
-    breakdown['Grand Total'] = total
+    breakdown['Grand Total'] = sum(breakdown.values())
     return breakdown
 
 # --- RENDERING FUNCTIONS ---
 
 def show_price_trend(prices: pd.Series):
-    fig, ax = plt.subplots()
-    prices.plot(ax=ax)
-    ax.set_ylabel('Price')
-    ax.set_xlabel('Date')
-    ax.set_title('6-Month Market Price Trend')
-    st.pyplot(fig)
+    df = prices.rename_axis('Date').reset_index(name='Price')
+    chart = alt.Chart(df).mark_line(point=True).encode(
+        x='Date:T',
+        y='Price:Q'
+    ).properties(
+        title='6-Month Market Price Trend'
+    )
+    st.altair_chart(chart, use_container_width=True)
 
 
 def render_car_card(car: dict, selected_port: str, price_type: str):
@@ -80,13 +78,12 @@ def render_car_card(car: dict, selected_port: str, price_type: str):
 
     st.markdown(f"### {car['year']} {car['make']} {car['model']}")
     base = car['price']
-    # Example fixed fees; in reality these could be dynamic
     land_fee = 30000
     freight_fee = 300000
     breakdown = calculate_breakdown(base, price_type, land_fee, freight_fee)
 
-    for k, v in breakdown.items():
-        st.markdown(f"**{k}:** ¥{int(v):,}")
+    for label, amount in breakdown.items():
+        st.markdown(f"**{label}:** ¥{int(amount):,}")
 
     st.markdown(f"**Mileage:** {car['mileage']:,} km")
 
