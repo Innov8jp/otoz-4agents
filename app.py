@@ -1,5 +1,5 @@
 # ==============================================================================  
-# FINAL, ALL-IN-ONE PRODUCTION SCRIPT (Fixed Expander & Dynamic Ports) + QA + Admin QA UI
+# FINAL, ALL-IN-ONE PRODUCTION SCRIPT (Chat Ready + QA + Admin UI)
 # ==============================================================================  
 
 # --- SECTION 1: IMPORTS ---  
@@ -19,12 +19,9 @@ import json
 import re  
 import altair as alt
 
-# Polyfill for rerun compatibility
-def _maybe_rerun():
-    try:
-        _maybe_rerun()
-    except AttributeError:
-        return  
+# Patch for rerun compatibility
+if not hasattr(st, "rerun") and hasattr(st, "experimental_rerun"):
+    st.rerun = st.experimental_rerun
 
 # --- SECTION 2: GLOBAL SETTINGS ---  
 PAGE_TITLE = "Sparky - AI Transaction Manager"  
@@ -140,5 +137,30 @@ if 'admin_qa' in st.session_state or st.sidebar.checkbox("Admin QA Mode"):
                 st.error(f"❌ Failed with error: {e}")
         else:
             st.warning("Breakdown calculation failed. Check input price.")
+
+# --- SECTION 7: PLACE OFFER & CHAT LAUNCH ---
+if st.sidebar.button("Place Offer / Launch Chat"):
+    customer = st.session_state.get("customer_info", {})
+    if not customer.get("name") or not customer.get("email"):
+        st.error("Please complete your information before proceeding.")
+        st.write("Customer Info Debug:", customer)
+    else:
+        st.success("✅ Customer info verified. Launching chat...")
+        st.markdown("💬 *Welcome to Sparky Chat! Please tell us your offer or ask anything about the vehicle.*")
+
+        if "chat_history" not in st.session_state:
+            st.session_state.chat_history = []
+
+        user_input = st.chat_input("Ask Sparky...")
+        if user_input:
+            st.session_state.chat_history.append(("user", user_input))
+            # Very basic intent echo for now — replace with real NLP later
+            st.session_state.chat_history.append(("sparky", f"You asked: '{user_input}' — we'll process that soon!"))
+
+        for speaker, msg in st.session_state.chat_history:
+            if speaker == "user":
+                st.chat_message("user").write(msg)
+            else:
+                st.chat_message("assistant").write(msg)
 
 # --- END OF SCRIPT ---
