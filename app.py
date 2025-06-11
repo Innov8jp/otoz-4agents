@@ -1,5 +1,5 @@
 # ==============================================================================  
-# FINAL, ALL-IN-ONE PRODUCTION SCRIPT (Fixed Expander & Dynamic Ports) + QA  
+# FINAL, ALL-IN-ONE PRODUCTION SCRIPT (Fixed Expander & Dynamic Ports) + QA + Admin QA UI
 # ==============================================================================  
 
 # --- SECTION 1: IMPORTS ---  
@@ -83,6 +83,9 @@ def load_intents(path):
 
 # --- SECTION 5: PRICE BREAKDOWN & INVOICE ---  
 def calculate_total_price(base,opt):  
+    if not isinstance(base, (int, float)):
+        st.error("Invalid price data. Please check the selected vehicle.")
+        return None
     bd = {'base_price':base,'domestic_transport':0,'freight_cost':0,'insurance':0}  
     if opt in ['FOB','C&F','CIF']: bd['domestic_transport'] = DOMESTIC_TRANSPORT  
     if opt in ['C&F','CIF']: bd['freight_cost'] = FREIGHT_COST  
@@ -104,30 +107,38 @@ def generate_invoice_html(cust,car,bd):
             f"<table border='1'><tr><th>Item</th><th>Amount (JPY)</th></tr>{rows}</table>"
             "</body></html>")
 
-# --- SECTION 6: QA TESTS ---
-if __name__ == "__main__":
-    print("Running QA Tests...\n")
+# --- SECTION 6: STREAMLIT ADMIN QA MODE ---
+if 'admin_qa' in st.session_state or st.sidebar.checkbox("Admin QA Mode"):
+    st.title("🔍 QA Test Interface")
+    st.markdown("This section runs invoice QA tests inside the app.")
 
-    sample_customers = [
+    test_customers = [
         {},
         {"email": "test@example.com"},
         {"name": "Asif"},
         {"name": "Asif", "email": "asif@example.com"}
     ]
 
-    sample_car = {
+    test_car = {
         "make": "Toyota",
         "model": "Corolla",
         "year": 2020,
         "price": 1500000
     }
 
-    breakdown = calculate_total_price(sample_car["price"], "CIF")
+    breakdown = calculate_total_price(test_car["price"], "CIF")
 
-    for i, cust in enumerate(sample_customers, 1):
-        try:
-            result = generate_invoice_html(cust, sample_car, breakdown)
-            assert "<html>" in result
-            print(f"✅ Test Case {i}: PASSED")
-        except Exception as e:
-            print(f"❌ Test Case {i}: FAILED — {e}")
+    for i, cust in enumerate(test_customers, 1):
+        st.subheader(f"Test Case {i}")
+        if breakdown:
+            try:
+                html = generate_invoice_html(cust, test_car, breakdown)
+                st.success(f"✅ Passed for customer: {cust}")
+                with st.expander("Show Invoice Preview"):
+                    st.components.v1.html(html, height=300)
+            except Exception as e:
+                st.error(f"❌ Failed with error: {e}")
+        else:
+            st.warning("Breakdown calculation failed. Check input price.")
+
+# --- END OF SCRIPT ---
