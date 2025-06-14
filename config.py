@@ -12,12 +12,6 @@ SELLER_INFO = {
 # --- Data & File Paths ---
 INVENTORY_FILE_PATH = 'inventory.csv'
 INTENTS_FILE_PATH = 'intents_200.json'
-MILEAGE_RANGE = (5_000, 150_000)
-
-# --- Shipping Cost Parameters (in JPY) ---
-DOMESTIC_TRANSPORT = 50_000
-FREIGHT_COST = 150_000
-INSURANCE_RATE = 0.025
 
 # --- Vehicle & Destination Data ---
 CAR_MAKERS_AND_MODELS = {
