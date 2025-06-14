@@ -1,0 +1,4 @@
+id,make,model,year,price,location,image_url
+1,Toyota,Corolla,2019,6500,Yokohama,https://placehold.co/400x300?text=Corolla
+2,Honda,Civic,2018,6200,Osaka,https://placehold.co/400x300?text=Civic
+3,Nissan,Note,2020,6800,Nagoya,https://placehold.co/400x300?text=Note
