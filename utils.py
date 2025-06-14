@@ -1,5 +1,4 @@
 # utils.py
-# This is your "toolbox" with all the helper functions and logic.
 
 import streamlit as st
 import pandas as pd
@@ -47,8 +46,7 @@ def get_bot_response(user_input: str):
     matches = get_close_matches(lowered_input, all_patterns, n=1, cutoff=0.6)
     tag = pattern_to_tag[matches[0]] if matches else None
 
-    # --- Action Engine ---
-    if tag == 'find_car':
+    if tag == 'update_filter':
         active_filters = st.session_state.active_filters.copy()
         updated = False
         for make in CAR_MAKERS_AND_MODELS.keys():
@@ -62,16 +60,14 @@ def get_bot_response(user_input: str):
             st.session_state.active_filters = active_filters
             st.session_state.current_car_index = 0; st.rerun()
 
-    # --- Response Generation ---
     response_text = "I'm sorry, I don't quite understand. A human sales agent will review your question."
     if tag:
         for intent in intents_data['intents']:
             if intent['tag'] == tag:
                 response_text = random.choice(intent['responses']); break
     
-    # --- Placeholder Replacement ---
     if '{' in response_text:
-        format_map = default_map({})
-        response_text = response_text.format_map(format_map)
+        # This logic can be expanded
+        pass
         
     return response_text
