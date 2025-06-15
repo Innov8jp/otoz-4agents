@@ -1,133 +1,103 @@
-# ==============================================================================  
-# Golden Copy, ALL-IN-ONE PRODUCTION SCRIPT (Fixed Expander & Dynamic Ports) + QA  
-# ==============================================================================  
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
 
-# --- SECTION 1: IMPORTS ---  
-try:
-    import streamlit as st
-except ModuleNotFoundError:
-    raise ImportError("The 'streamlit' module is not installed in this environment. Please install it via 'pip install streamlit' and run this script in a compatible environment.")
+# -----------------------------
+# Page Configuration
+# -----------------------------
+st.set_page_config(
+    page_title="Otoz.ai Concierge",
+    page_icon="🚗",
+    layout="wide"
+)
 
-import pandas as pd  
-import random  
-import os  
-import traceback  
-from datetime import datetime  
-from pandas.tseries.offsets import DateOffset  
-from difflib import get_close_matches  
-import json  
-import re  
-import altair as alt
+st.title("🚗 Otoz.ai – Cross-Border Car Concierge")
 
-# Polyfill for rerun compatibility
-def _maybe_rerun():
-    try:
-        _maybe_rerun()
-    except AttributeError:
-        return  
+# -----------------------------
+# Load Data
+# -----------------------------
+inventory = pd.read_csv("data/inventory.csv")
+ports = pd.read_csv("data/ports.csv")
+market_prices = pd.read_csv("data/market_prices.csv")
 
-# --- SECTION 2: GLOBAL SETTINGS ---  
-PAGE_TITLE = "Sparky - AI Transaction Manager"  
-PAGE_ICON = "🚗"  
-INVENTORY_FILE_PATH = 'inventory.csv'  
-INTENTS_FILE_PATH = 'intents.json'  
+# -----------------------------
+# Sidebar Filters
+# -----------------------------
+st.sidebar.header("🔍 Search Preferences")
 
-PORTS_BY_COUNTRY = {  
-    "Australia": ["Melbourne", "Sydney"], "Canada": ["Vancouver"], "Kenya": ["Mombasa"],  
-    "New Zealand": ["Auckland"], "Pakistan": ["Karachi"], "Tanzania": ["Dar es Salaam"],  
-    "United Arab Emirates": ["Jebel Ali (Dubai)"], "United Kingdom": ["Southampton"],  
-}  
-DOMESTIC_TRANSPORT = 50_000  
-FREIGHT_COST = 150_000  
-INSURANCE_RATE = 0.025  
+make_options = inventory["make"].unique()
+selected_make = st.sidebar.selectbox("Car Make", make_options)
 
-# --- SECTION 3: DATA LOADING & SIMULATION ---  
-@st.cache_data  
-def load_data(path):  
-    if not os.path.exists(path):  
-        st.error(f"File not found: {path}")  
-        return None  
-    if path.endswith('.csv'):  
-        df = pd.read_csv(path)  
-        if 'image_url' not in df.columns:  
-            df['image_url'] = df.apply(lambda r: f"https://placehold.co/600x400?text={r.make}+{r.model}", axis=1)  
-        if 'id' not in df.columns:  
-            df.reset_index(inplace=True)  
-            df['id'] = df['index'].apply(lambda i: f"VID{i:04d}")  
-        return df  
-    if path.endswith('.json'):  
-        with open(path,'r',encoding='utf-8') as f:  
-            return json.load(f)  
-    return None  
+model_options = inventory[inventory["make"] == selected_make]["model"].unique()
+selected_model = st.sidebar.selectbox("Model", model_options)
 
-@st.cache_data  
-def simulate_price_history(df):  
-    hist=[]  
-    today = pd.to_datetime(datetime.now())  
-    for _,r in df.head(50).iterrows():  
-        base = r['price']  
-        for m in range(1,7):  
-            dt = today - DateOffset(months=m)  
-            price = int(base * (0.995**m) * (1 + random.uniform(-0.05,0.05)))  
-            hist.append({'make':r['make'],'model':r['model'],'date':dt,'avg_price':price})  
-    return pd.DataFrame(hist)  
+year = st.sidebar.slider("Minimum Year", 2015, 2022, 2018)
 
-# --- SECTION 4: INTENTS LOADING ---  
-@st.cache_data  
-def load_intents(path):  
-    try:  
-        with open(path,'r',encoding='utf-8') as f:  
-            return json.load(f).get('intents',[])  
-    except Exception:  
-        return []  
+countries = ports["country"].unique()
+selected_country = st.sidebar.selectbox("Destination Country", countries)
 
-# --- SECTION 5: PRICE BREAKDOWN & INVOICE ---  
-def calculate_total_price(base,opt):  
-    bd = {'base_price':base,'domestic_transport':0,'freight_cost':0,'insurance':0}  
-    if opt in ['FOB','C&F','CIF']: bd['domestic_transport'] = DOMESTIC_TRANSPORT  
-    if opt in ['C&F','CIF']: bd['freight_cost'] = FREIGHT_COST  
-    if opt == 'CIF': bd['insurance'] = (base + bd['freight_cost']) * INSURANCE_RATE  
-    bd['total_price'] = sum(bd.values())  
-    return bd  
+available_ports = ports[ports["country"] == selected_country]["port"]
+selected_port = st.sidebar.selectbox("Destination Port", available_ports)
 
-def generate_invoice_html(cust,car,bd):  
-    name = cust.get('name', 'Unknown')
-    email = cust.get('email', 'unknown@example.com')
-    rows = f"<tr><td>{car['year']} {car['make']} {car['model']}</td><td>{bd['base_price']:,}</td></tr>"  
-    if bd['domestic_transport']: rows += f"<tr><td>Domestic Transport</td><td>{bd['domestic_transport']:,}</td></tr>"  
-    if bd['freight_cost']: rows += f"<tr><td>Freight Cost</td><td>{bd['freight_cost']:,}</td></tr>"  
-    if bd['insurance']: rows += f"<tr><td>Insurance</td><td>{int(bd['insurance']):,}</td></tr>"  
-    rows += f"<tr><td><strong>Total</strong></td><td><strong>{bd['total_price']:,}</strong></td></tr>"  
-    return ("<html><body>"
-            f"<h2>Invoice</h2><p>Date: {datetime.now().date()}</p>"
-            f"<p>Customer: {name} &lt;{email}&gt;</p>"
-            f"<table border='1'><tr><th>Item</th><th>Amount (JPY)</th></tr>{rows}</table>"
-            "</body></html>")
+st.sidebar.markdown("---")
+st.sidebar.info("Selected car + port data will help finalize your quote.")
 
-# --- SECTION 6: QA TESTS ---
-if __name__ == "__main__":
-    print("Running QA Tests...\n")
+# -----------------------------
+# Filtered Car Listings
+# -----------------------------
+filtered_cars = inventory[
+    (inventory["make"] == selected_make) &
+    (inventory["model"] == selected_model) &
+    (inventory["year"] >= year)
+]
 
-    sample_customers = [
-        {},
-        {"email": "test@example.com"},
-        {"name": "Asif"},
-        {"name": "Asif", "email": "asif@example.com"}
-    ]
+st.subheader(f"🔎 Showing {len(filtered_cars)} Matching Cars")
 
-    sample_car = {
-        "make": "Toyota",
-        "model": "Corolla",
-        "year": 2020,
-        "price": 1500000
-    }
+# -----------------------------
+# Price Calculator
+# -----------------------------
+def calculate_prices(base_price):
+    fob = base_price + 150
+    cf = fob + 2000
+    cif = cf + (base_price * 0.02)
+    return round(fob, 2), round(cf, 2), round(cif, 2)
 
-    breakdown = calculate_total_price(sample_car["price"], "CIF")
+# -----------------------------
+# Show Cars
+# -----------------------------
+for i, row in filtered_cars.iterrows():
+    with st.container():
+        st.markdown("---")
+        cols = st.columns([1, 2])
+        with cols[0]:
+            st.image(row["image_url"], width=250)
+        with cols[1]:
+            st.markdown(f"**{row['year']} {row['make']} {row['model']}**")
+            st.write(f"📍 Location: {row['location']}")
+            fob, cf, cif = calculate_prices(row["price"])
+            st.write(f"💰 FOB: ${fob}")
+            st.write(f"🚢 C&F: ${cf}")
+            st.write(f"🛡️ CIF: ${cif}")
+            with st.expander("📈 Market Price Trend"):
+                trend = market_prices[
+                    (market_prices["make"] == row["make"]) &
+                    (market_prices["model"] == row["model"])
+                ]
+                fig, ax = plt.subplots()
+                ax.plot(trend["month"], trend["price"], marker="o")
+                ax.set_title(f"{row['make']} {row['model']} Price Trend")
+                ax.set_xlabel("Month")
+                ax.set_ylabel("Price (USD)")
+                st.pyplot(fig)
 
-    for i, cust in enumerate(sample_customers, 1):
-        try:
-            result = generate_invoice_html(cust, sample_car, breakdown)
-            assert "<html>" in result
-            print(f"✅ Test Case {i}: PASSED")
-        except Exception as e:
-            print(f"❌ Test Case {i}: FAILED — {e}")
+        btn_cols = st.columns([1, 1])
+        if btn_cols[0].button("❤️ Like", key=f"like_{i}"):
+            st.success("Agent A will start negotiation soon...")
+        if btn_cols[1].button("❌ Pass", key=f"pass_{i}"):
+            st.info("Skipping this car.")
+
+# -----------------------------
+# Footer
+# -----------------------------
+st.markdown("---")
+st.caption("Powered by Otoz.ai – Your Global Car Concierge")
