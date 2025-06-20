@@ -1,1 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otoz.ai - The Future of Cross-Border Vehicle Trading</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
 
+    <!-- Welcome Page -->
+    <div class="welcome-page" id="welcome-page">
+        <div class="floating-elements">
+            <div class="floating-icon" style="left: 10%; animation-delay: 0s;">🚗</div>
+            <div class="floating-icon" style="left: 20%; animation-delay: 2s;">⚡</div>
+            <div class="floating-icon" style="left: 30%; animation-delay: 4s;">🤖</div>
+            <div class="floating-icon" style="left: 40%; animation-delay: 6s;">🌐</div>
+            <div class="floating-icon" style="left: 50%; animation-delay: 8s;">💎</div>
+            <div class="floating-icon" style="left: 60%; animation-delay: 10s;">🚀</div>
+            <div class="floating-icon" style="left: 70%; animation-delay: 12s;">💳</div>
+            <div class="floating-icon" style="left: 80%; animation-delay: 14s;">🚚</div>
+            <div class="floating-icon" style="left: 90%; animation-delay: 16s;">⚡</div>
+        </div>
+
+        <div class="hero-content">
+            <div class="company-logo">
+                <!-- Enhanced Otoz.ai Logo SVG -->
+                <svg class="otoz-logo" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
+                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge> 
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    
+                    <!-- Outer circle -->
+                    <circle cx="60" cy="60" r="55" fill="none" stroke="url(#logoGradient)" stroke-width="3" opacity="0.3"/>
+                    
+                    <!-- Car silhouette -->
+                    <path d="M25 70 L35 55 L45 50 L75 50 L85 55 L95 70 L95 85 L25 85 Z" fill="url(#logoGradient)" filter="url(#glow)"/>
+                    
+                    <!-- Car details -->
+                    <path d="M40 55 L45 50 L75 50 L80 55 Z" fill="rgba(255,255,255,0.4)"/>
+                    <circle cx="40" cy="80" r="8" fill="white" stroke="url(#logoGradient)" stroke-width="2"/>
+                    <circle cx="80" cy="80" r="8" fill="white" stroke="url(#logoGradient)" stroke-width="2"/>
+                    
+                    <!-- AI brain center -->
+                    <circle cx="60" cy="62" r="15" fill="rgba(255,255,255,0.95)" stroke="url(#logoGradient)" stroke-width="2"/>
+                    
+                    <!-- AI neural network -->
+                    <circle cx="55" cy="58" r="2" fill="url(#logoGradient)"/>
+                    <circle cx="65" cy="58" r="2" fill="url(#logoGradient)"/>
+                    <circle cx="60" cy="66" r="2" fill="url(#logoGradient)"/>
+                    <line x1="55" y1="58" x2="60" y2="66" stroke="url(#logoGradient)" stroke-width="1"/>
+                    <line x1="65" y1="58" x2="60" y2="66" stroke="url(#logoGradient)" stroke-width="1"/>
+                    
+                    <!-- Tech elements -->
+                    <path d="M55 45 L60 40 L58 42 L63 37 L58 42 L60 45 Z" fill="#FFD700" filter="url(#glow)"/>
+                    
+                    <!-- Company initials -->
+                    <text x="60" y="95" text-anchor="middle" fill="url(#logoGradient)" font-size="12" font-weight="bold">OTOZ</text>
+                </svg>
+                Otoz.ai
+            </div>
+            <div class="tagline">First AI-Driven Cross-Border Used Car Marketplace</div>
+            <div class="hero-description">
+                Buy Used Cars Globally—Speedy Buying, Shipping Right Away! Powered by AI for Smart, Secure, rapid Transactions—Revolutionizing Car Trade History with our Multi-Agent AI Concierge System.
+            </div>
+
+            <div class="stats-container">
+                <div class="stat-item">
+                    <span class="stat-number">4</span>
+                    <span class="stat-label">AI Agents</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">10%</span>
+                    <span class="stat-label">Smart Discounts</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Autonomous</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">Global</span>
+                    <span class="stat-label">Reach</span>
+                </div>
+            </div>
+
+            <!-- Enhanced Revolving Agent Hero Section -->
+            <div class="agent-hero-container">
+                <div class="agent-carousel">
+                    <div class="agent-hero-card" style="--rotation: 0deg;">
+                        <div class="agent-big-avatar sparky-avatar">⚡</div>
+                        <div class="agent-hero-name">Sparky</div>
+                        <div class="agent-hero-role">Discovery & Negotiation Expert</div>
+                    </div>
+                    
+                    <div class="agent-hero-card" style="--rotation: 90deg;">
+                        <div class="agent-big-avatar inspector-avatar">🔍</div>
+                        <div class="agent-hero-name">Inspector</div>
+                        <div class="agent-hero-role">Quality Assurance Specialist</div>
+                    </div>
+                    
+                    <div class="agent-hero-card" style="--rotation: 180deg;">
+                        <div class="agent-big-avatar penny-avatar">💎</div>
+                        <div class="agent-hero-name">Penny</div>
+                        <div class="agent-hero-role">Payment & Billing Wizard</div>
+                    </div>
+                    
+                    <div class="agent-hero-card" style="--rotation: 270deg;">
+                        <div class="agent-big-avatar captain-avatar">🌊</div>
+                        <div class="agent-hero-name">Captain</div>
+                        <div class="agent-hero-role">Global Shipping Commander</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="agent-selection-hint">
+                🎮 Watch your AI team revolve • Each agent specializes in different aspects of your car buying journey
+            </div>
+
+            <div class="game-start-controls">
+                <button class="start-game-btn" onclick="startDemo()">
+                    🚀 START YOUR JOURNEY
+                </button>
+                <button class="existing-customer-btn" onclick="showExistingCustomerInfo()">
+                    👤 EXISTING CUSTOMER
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Container -->
+    <div class="demo-container" id="demo-container">
+        <!-- Enhanced Onboarding Phase -->
+        <div class="onboarding-container" id="onboarding-phase">
+            <div class="onboarding-content">
+                <div class="onboarding-title">🤖 Hi! I'm Sparky, Your AI Car Expert</div>
+                <div class="onboarding-subtitle">Let me find the perfect car for you! Tell me your preferences...</div>
+                
+                <div class="preference-cards">
+                    <!-- Enhanced Vehicle Selection -->
+                    <div class="preference-section">
+                        <div class="preference-title">🚗 Select Your Preferred Vehicle</div>
+                        <div class="vehicle-selection-grid">
+                            <div class="form-group">
+                                <label class="form-label">Make</label>
+                                <select class="form-select" id="car-make" onchange="updateModelOptions()">
+                                    <option value="">Any Make</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Model</label>
+                                <select class="form-select" id="car-model" onchange="updateYearOptions()">
+                                    <option value="">Any Model</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Year</label>
+                                <select class="form-select" id="car-year" onchange="updatePreferenceStatus()">
+                                    <option value="">Any Year</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Mileage Range -->
+                    <div class="preference-section">
+                        <div class="preference-title">📏 Preferred mileage range?</div>
+                        <div class="range-slider-container">
+                            <div class="range-labels">
+                                <span>1,000 km</span>
+                                <span>200,000 km</span>
+                            </div>
+                            <input type="range" class="range-slider" id="mileage-range" min="1000" max="200000" value="50000" step="1000" oninput="updateMileageDisplay(this.value)">
+                            <div class="range-value" id="mileage-display">50,000 km</div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Budget Range -->
+                    <div class="preference-section">
+                        <div class="preference-title">💰 What's your budget?</div>
+                        <div class="range-slider-container">
+                            <div class="range-labels">
+                                <span>$1,000</span>
+                                <span>$1,000,000</span>
+                            </div>
+                            <input type="range" class="range-slider" id="budget-range" min="1000" max="1000000" value="25000" step="1000" oninput="updateBudgetDisplay(this.value)">
+                            <div class="range-value" id="budget-display">$25,000</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="find-cars-btn" onclick="findMatchingCars()">
+                    ⚡ Find My Perfect Cars
+                </button>
+            </div>
+        </div>
+
+        <!-- Enhanced Car Discovery Phase -->
+        <div class="car-discovery-container" id="car-discovery-phase">
+            <div class="discovery-header">
+                <div class="discovery-title">🎯 Choose Your Perfect Car!</div>
+                <div class="discovery-subtitle">Click the car you like to start negotiating with Sparky!</div>
+            </div>
+            
+            <div style="display: flex; justify-content: center; align-items: center; min-height: 400px; padding: 20px;">
+                <div class="simple-car-grid" id="simple-car-grid">
+                    <!-- Enhanced Car Cards will be generated here -->
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="goBackToPreferences()">← Change Preferences</button>
+            </div>
+        </div>
+
+        <!-- Enhanced Chat Interface -->
+        <div style="display: none; width: 100%; height: 100%;" id="chat-interface">
+            <div class="sidebar">
+                <div class="logo">
+                    <svg class="sidebar-logo" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="sidebarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M25 70 L35 55 L45 50 L75 50 L85 55 L95 70 L95 85 L25 85 Z" fill="url(#sidebarGradient)"/>
+                        <circle cx="40" cy="80" r="6" fill="white"/>
+                        <circle cx="80" cy="80" r="6" fill="white"/>
+                        <circle cx="60" cy="62" r="8" fill="rgba(255,255,255,0.9)"/>
+                        <path d="M55 45 L60 40 L58 42 L63 37 L58 42 L60 45 Z" fill="#FFD700"/>
+                    </svg>
+                    Otoz.ai
+                </div>
+                
+                <div class="agent-status">
+                    <h4 style="margin-bottom: 15px; color: #334155;">Your AI Team</h4>
+                    
+                    <div class="agent-card active" id="agent-sparky">
+                        <div class="agent-avatar sparky-avatar">⚡</div>
+                        <div class="agent-name">Sparky</div>
+                        <div class="agent-role">Discovery & Negotiation</div>
+                        <div class="agent-tagline">Your energetic car finder!</div>
+                    </div>
+                    
+                    <div class="agent-card" id="agent-inspector">
+                        <div class="agent-avatar inspector-avatar">🔍</div>
+                        <div class="agent-name">Inspector</div>
+                        <div class="agent-role">Pre-Export Inspection</div>
+                        <div class="agent-tagline">Quality guarantee</div>
+                    </div>
+                    
+                    <div class="agent-card" id="agent-penny">
+                        <div class="agent-avatar penny-avatar">💎</div>
+                        <div class="agent-name">Penny</div>
+                        <div class="agent-role">Payment & Billing</div>
+                        <div class="agent-tagline">Financial wizard</div>
+                    </div>
+                    
+                    <div class="agent-card" id="agent-captain">
+                        <div class="agent-avatar captain-avatar">🌊</div>
+                        <div class="agent-name">Captain</div>
+                        <div class="agent-role">Logistics & Delivery</div>
+                        <div class="agent-tagline">Global shipping expert</div>
+                    </div>
+                </div>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress" style="width: 25%"></div>
+                </div>
+                
+                <div style="margin-top: auto; font-size: 12px; color: #64748b; text-align: center;">
+                    <strong>4-Agent AI System</strong><br>
+                    Discovery → Inspection → Payment → Shipping
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="header">
+                    <button class="back-btn" onclick="goBack()">← Back to Home</button>
+                    <h2 id="current-agent-title">Discovery & Negotiation with Sparky</h2>
+                    <div class="demo-badge">Live Demo</div>
+                </div>
+                
+                <div class="chat-area">
+                    <!-- Enhanced Negotiation Phase -->
+                    <div class="negotiation-phase" id="negotiation-phase">
+                        <div class="selected-car-display" id="selected-car-display">
+                            <!-- Selected car details will be populated here -->
+                        </div>
+                        
+                        <div class="negotiation-info">
+                            <strong>⚡ Sparky's AI Negotiation Engine:</strong> I can offer intelligent discounts up to 10%
+                            <div class="price-range">
+                                <span>My best price: <span id="min-price">$16,650</span></span>
+                                <span>Listed price: <span id="max-price">$18,500</span></span>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-messages" id="negotiation-messages">
+                            <div class="message">
+                                <div class="message-avatar sparky-avatar">⚡</div>
+                                <div class="message-content">Hey there! I'm Sparky, your personal car-hunting AI! ⚡ I'm absolutely THRILLED you picked this amazing ride! This beauty is already at a great price, but here's the exciting part - I've got some AI magic up my sleeve and might be able to work out an even better deal for you! What do you think about the current price? Let's make some sparks fly! 🚗✨</div>
+                            </div>
+                            
+                            <div class="typing-indicator" id="typing-negotiation">
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input-container">
+                            <input type="text" class="chat-input" id="negotiation-input" placeholder="Type your message... Try: 'That's too expensive' or 'What's your best price?'" />
+                            <button class="send-btn" onclick="sendNegotiationMessage()">➤</button>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" onclick="quickReply('That seems too expensive. Can you do better?')">💰 Too Expensive</button>
+                            <button class="btn btn-secondary" onclick="quickReply('What is your absolute best price?')">🤝 Best Price?</button>
+                            <button class="btn btn-primary" onclick="acceptCurrentPrice()" id="accept-btn">✅ Accept Deal</button>
+                        </div>
+                    </div>
+
+                    <!-- Success Phase -->
+                    <div id="success-phase" style="display: none;">
+                        <div class="success-animation">
+                            <div class="checkmark">✅</div>
+                            <div class="success-title">Mission Complete! 🎉</div>
+                            <div class="success-message">
+                                Congratulations! Your 4-agent AI team has successfully coordinated your vehicle purchase, inspection, payment, and shipping.
+                            </div>
+                            
+                            <div class="order-summary">
+                                <h4 style="color: #1e293b; margin-bottom: 15px;">📦 Order Summary</h4>
+                                <div class="summary-row">
+                                    <span>Vehicle:</span>
+                                    <strong id="summary-vehicle">-</strong>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Total Paid:</span>
+                                    <strong id="summary-total">$22,000</strong>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Shipping Terms:</span>
+                                    <strong id="summary-terms">FOB</strong>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Destination:</span>
+                                    <strong id="summary-destination">Customer Port</strong>
+                                </div>
+                                <div class="summary-row">
+                                    <span>ETA:</span>
+                                    <strong>20 business days</strong>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Tracking ID:</span>
+                                    <strong>OTOZ-TRK-789456</strong>
+                                </div>
+                            </div>
+                            
+                            <div style="background: #f0f4ff; border: 1px solid #c7d2fe; border-radius: 15px; padding: 20px; margin: 20px 0; text-align: left;">
+                                <h4 style="color: #4338ca; margin-bottom: 15px;">🤖 Your AI Team Journey:</h4>
+                                <div style="color: #4338ca; font-size: 14px; line-height: 1.6;">
+                                    <div style="margin-bottom: 8px;"><strong>⚡ Sparky:</strong> Found and negotiated your perfect car</div>
+                                    <div style="margin-bottom: 8px;"><strong>🔍 Inspector:</strong> Verified quality with 127-point inspection</div>
+                                    <div style="margin-bottom: 8px;"><strong>💎 Penny:</strong> Processed payment and documentation</div>
+                                    <div><strong>🌊 Captain:</strong> Coordinated global shipping logistics</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="restartDemo()">🔄 Try Another Demo</button>
+                            <button class="btn btn-secondary" onclick="goBack()">🏠 Back to Home</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
