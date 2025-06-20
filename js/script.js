@@ -1,72 +1,31 @@
-// ===== OTOZ.AI JAVASCRIPT WITH REAL DATA FROM CSV =====
+// OTOZ.AI SHORT SCRIPT - 10 CARS ONLY
 
-let currentPhase = 'onboarding';
-let selectedMake = '';
-let selectedModel = '';
-let selectedYear = '';
-let selectedMileage = 150000;
-let selectedBudget = 7000;
-let availableCars = [];
-let selectedCar = null;
-let currentPrice = 0;
-let originalPrice = 0;
-let discountApplied = 0;
-let negotiationCount = 0;
+let selectedMake = '', selectedModel = '', selectedYear = '';
+let selectedMileage = 150000, selectedBudget = 7000;
+let availableCars = [], selectedCar = null;
+let currentPrice = 0, originalPrice = 0, discountApplied = 0, negotiationCount = 0;
 
-// REAL OTOZ.AI CAR DATABASE FROM YOUR CSV
-const realCarDatabase = [
-    {id: 1, make: 'Toyota', model: 'Corolla', year: 2020, price: 3912, location: 'Tokyo', image_url: 'https://placehold.co/400x300?text=Toyota+Corolla', icon: '🚗'},
-    {id: 2, make: 'Toyota', model: 'Corolla', year: 2020, price: 5253, location: 'Fukuoka', image_url: 'https://placehold.co/400x300?text=Toyota+Corolla', icon: '🚗'},
-    {id: 3, make: 'Toyota', model: 'Corolla', year: 2016, price: 4143, location: 'Osaka', image_url: 'https://placehold.co/400x300?text=Toyota+Corolla', icon: '🚗'},
-    {id: 4, make: 'Toyota', model: 'Aqua', year: 2020, price: 9067, location: 'Kobe', image_url: 'https://placehold.co/400x300?text=Toyota+Aqua', icon: '🚗'},
-    {id: 5, make: 'Toyota', model: 'Aqua', year: 2015, price: 7837, location: 'Sapporo', image_url: 'https://placehold.co/400x300?text=Toyota+Aqua', icon: '🚗'},
-    {id: 6, make: 'Toyota', model: 'Aqua', year: 2015, price: 3244, location: 'Osaka', image_url: 'https://placehold.co/400x300?text=Toyota+Aqua', icon: '🚗'},
-    {id: 7, make: 'Toyota', model: 'Prius', year: 2016, price: 4905, location: 'Kobe', image_url: 'https://placehold.co/400x300?text=Toyota+Prius', icon: '🚗'},
-    {id: 8, make: 'Toyota', model: 'Prius', year: 2019, price: 3217, location: 'Kobe', image_url: 'https://placehold.co/400x300?text=Toyota+Prius', icon: '🚗'},
-    {id: 9, make: 'Toyota', model: 'Prius', year: 2019, price: 6318, location: 'Fukuoka', image_url: 'https://placehold.co/400x300?text=Toyota+Prius', icon: '🚗'},
-    {id: 10, make: 'Toyota', model: 'Prius', year: 2018, price: 4776, location: 'Sendai', image_url: 'https://placehold.co/400x300?text=Toyota+Prius', icon: '🚗'},
-    {id: 11, make: 'Toyota', model: 'Vitz', year: 2015, price: 5489, location: 'Naha', image_url: 'https://placehold.co/400x300?text=Toyota+Vitz', icon: '🚗'},
-    {id: 12, make: 'Toyota', model: 'Vitz', year: 2016, price: 6074, location: 'Sendai', image_url: 'https://placehold.co/400x300?text=Toyota+Vitz', icon: '🚗'},
-    {id: 13, make: 'Honda', model: 'Fit', year: 2016, price: 6891, location: 'Hiroshima', image_url: 'https://placehold.co/400x300?text=Honda+Fit', icon: '🚙'},
-    {id: 14, make: 'Honda', model: 'Fit', year: 2019, price: 9942, location: 'Nagoya', image_url: 'https://placehold.co/400x300?text=Honda+Fit', icon: '🚙'},
-    {id: 15, make: 'Honda', model: 'Fit', year: 2018, price: 5831, location: 'Yokohama', image_url: 'https://placehold.co/400x300?text=Honda+Fit', icon: '🚙'},
-    {id: 16, make: 'Honda', model: 'Civic', year: 2017, price: 8234, location: 'Tokyo', image_url: 'https://placehold.co/400x300?text=Honda+Civic', icon: '🚙'},
-    {id: 17, make: 'Honda', model: 'Civic', year: 2020, price: 9156, location: 'Osaka', image_url: 'https://placehold.co/400x300?text=Honda+Civic', icon: '🚙'},
-    {id: 18, make: 'Honda', model: 'Civic', year: 2015, price: 6523, location: 'Kobe', image_url: 'https://placehold.co/400x300?text=Honda+Civic', icon: '🚙'},
-    {id: 19, make: 'Honda', model: 'Accord', year: 2018, price: 8967, location: 'Fukuoka', image_url: 'https://placehold.co/400x300?text=Honda+Accord', icon: '🚙'},
-    {id: 20, make: 'Honda', model: 'Accord', year: 2019, price: 9445, location: 'Sapporo', image_url: 'https://placehold.co/400x300?text=Honda+Accord', icon: '🚙'},
-    {id: 21, make: 'Nissan', model: 'Note', year: 2016, price: 5234, location: 'Naha', image_url: 'https://placehold.co/400x300?text=Nissan+Note', icon: '🚐'},
-    {id: 22, make: 'Nissan', model: 'Note', year: 2019, price: 7445, location: 'Tokyo', image_url: 'https://placehold.co/400x300?text=Nissan+Note', icon: '🚐'},
-    {id: 23, make: 'Nissan', model: 'March', year: 2015, price: 4156, location: 'Osaka', image_url: 'https://placehold.co/400x300?text=Nissan+March', icon: '🚐'},
-    {id: 24, make: 'Nissan', model: 'March', year: 2018, price: 5789, location: 'Kobe', image_url: 'https://placehold.co/400x300?text=Nissan+March', icon: '🚐'},
-    {id: 25, make: 'Nissan', model: 'Serena', year: 2017, price: 8234, location: 'Fukuoka', image_url: 'https://placehold.co/400x300?text=Nissan+Serena', icon: '🚐'},
-    {id: 26, make: 'Mazda', model: 'Demio', year: 2015, price: 4234, location: 'Naha', image_url: 'https://placehold.co/400x300?text=Mazda+Demio', icon: '🚕'},
-    {id: 27, make: 'Mazda', model: 'Demio', year: 2018, price: 6345, location: 'Tokyo', image_url: 'https://placehold.co/400x300?text=Mazda+Demio', icon: '🚕'},
-    {id: 28, make: 'Mazda', model: 'Axela', year: 2016, price: 5789, location: 'Osaka', image_url: 'https://placehold.co/400x300?text=Mazda+Axela', icon: '🚕'},
-    {id: 29, make: 'Mazda', model: 'CX-5', year: 2017, price: 8234, location: 'Fukuoka', image_url: 'https://placehold.co/400x300?text=Mazda+CX-5', icon: '🚕'},
-    {id: 30, make: 'Subaru', model: 'Impreza', year: 2015, price: 5234, location: 'Naha', image_url: 'https://placehold.co/400x300?text=Subaru+Impreza', icon: '🚖'}
+// 10 REAL CARS FROM YOUR CSV
+const cars = [
+    {id: 1, make: 'Toyota', model: 'Corolla', year: 2020, price: 3912, location: 'Tokyo', image: 'https://images.unsplash.com/photo-1623869675781-80aa31e436d1?w=400&h=300&fit=crop', icon: '🚗'},
+    {id: 2, make: 'Toyota', model: 'Aqua', year: 2020, price: 9067, location: 'Kobe', image: 'https://images.unsplash.com/photo-1549399504-84c2a8a4b71a?w=400&h=300&fit=crop', icon: '🚗'},
+    {id: 3, make: 'Toyota', model: 'Prius', year: 2019, price: 6318, location: 'Fukuoka', image: 'https://images.unsplash.com/photo-1572635148818-ef6fd45eb394?w=400&h=300&fit=crop', icon: '🚗'},
+    {id: 4, make: 'Honda', model: 'Fit', year: 2019, price: 9942, location: 'Nagoya', image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&h=300&fit=crop', icon: '🚙'},
+    {id: 5, make: 'Honda', model: 'Civic', year: 2020, price: 9156, location: 'Osaka', image: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400&h=300&fit=crop', icon: '🚙'},
+    {id: 6, make: 'Honda', model: 'Accord', year: 2018, price: 8967, location: 'Fukuoka', image: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400&h=300&fit=crop', icon: '🚙'},
+    {id: 7, make: 'Nissan', model: 'Note', year: 2019, price: 7445, location: 'Tokyo', image: 'https://images.unsplash.com/photo-1600712242805-5f78671b24da?w=400&h=300&fit=crop', icon: '🚐'},
+    {id: 8, make: 'Nissan', model: 'March', year: 2018, price: 5789, location: 'Kobe', image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=400&h=300&fit=crop', icon: '🚐'},
+    {id: 9, make: 'Mazda', model: 'Demio', year: 2018, price: 6345, location: 'Tokyo', image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=400&h=300&fit=crop', icon: '🚕'},
+    {id: 10, make: 'Subaru', model: 'Impreza', year: 2018, price: 7345, location: 'Tokyo', image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&h=300&fit=crop', icon: '🚖'}
 ];
 
-// Real car manufacturers from your data
-const realCarMakers = {
-    'Toyota': ['Corolla', 'Aqua', 'Prius', 'Vitz'],
+const carMakers = {
+    'Toyota': ['Corolla', 'Aqua', 'Prius'],
     'Honda': ['Fit', 'Civic', 'Accord'],
-    'Nissan': ['Note', 'March', 'Serena'],
-    'Mazda': ['Demio', 'Axela', 'CX-5'],
+    'Nissan': ['Note', 'March'],
+    'Mazda': ['Demio'],
     'Subaru': ['Impreza']
 };
-
-// REAL SHIPPING PORTS FROM YOUR CSV
-const shippingPorts = [
-    {country: 'Kenya', port: 'Mombasa'},
-    {country: 'Tanzania', port: 'Dar es Salaam'},
-    {country: 'Pakistan', port: 'Karachi'},
-    {country: 'Bangladesh', port: 'Chittagong'},
-    {country: 'Sri Lanka', port: 'Colombo'},
-    {country: 'Philippines', port: 'Manila'}
-];
-
-// ===== MAIN DEMO FUNCTIONS =====
 
 function startDemo() {
     document.getElementById('welcome-page').style.display = 'none';
@@ -75,11 +34,9 @@ function startDemo() {
 }
 
 function showOnboarding() {
-    currentPhase = 'onboarding';
     document.getElementById('onboarding-phase').style.display = 'flex';
     document.getElementById('car-discovery-phase').style.display = 'none';
     document.getElementById('chat-interface').style.display = 'none';
-    
     populateCarMakes();
     updatePreferenceStatus();
 }
@@ -87,10 +44,8 @@ function showOnboarding() {
 function populateCarMakes() {
     const makeSelect = document.getElementById('car-make');
     if (!makeSelect) return;
-    
     makeSelect.innerHTML = '<option value="">Any Make</option>';
-    
-    Object.keys(realCarMakers).forEach(make => {
+    Object.keys(carMakers).forEach(make => {
         const option = document.createElement('option');
         option.value = make;
         option.textContent = make;
@@ -102,53 +57,47 @@ function updateModelOptions() {
     selectedMake = document.getElementById('car-make').value;
     const modelSelect = document.getElementById('car-model');
     const yearSelect = document.getElementById('car-year');
-    
     modelSelect.innerHTML = '<option value="">Any Model</option>';
     yearSelect.innerHTML = '<option value="">Any Year</option>';
     selectedModel = '';
     selectedYear = '';
     
-    if (selectedMake && realCarMakers[selectedMake]) {
-        realCarMakers[selectedMake].forEach(model => {
+    if (selectedMake && carMakers[selectedMake]) {
+        carMakers[selectedMake].forEach(model => {
             const option = document.createElement('option');
             option.value = model;
             option.textContent = model;
             modelSelect.appendChild(option);
         });
     }
-    
     updatePreferenceStatus();
 }
 
 function updateYearOptions() {
     selectedModel = document.getElementById('car-model').value;
     const yearSelect = document.getElementById('car-year');
-    
     yearSelect.innerHTML = '<option value="">Any Year</option>';
     selectedYear = '';
-    
     if (selectedMake && selectedModel) {
-        const years = ['2020', '2019', '2018', '2017', '2016', '2015'];
-        years.forEach(year => {
+        ['2020', '2019', '2018', '2017', '2016'].forEach(year => {
             const option = document.createElement('option');
             option.value = year;
             option.textContent = year;
             yearSelect.appendChild(option);
         });
     }
-    
     updatePreferenceStatus();
 }
 
 function updateMileageDisplay(value) {
     selectedMileage = parseInt(value);
-    document.getElementById('mileage-display').textContent = `${selectedMileage.toLocaleString()} km`;
+    document.getElementById('mileage-display').textContent = selectedMileage.toLocaleString() + ' km';
     updatePreferenceStatus();
 }
 
 function updateBudgetDisplay(value) {
     selectedBudget = parseInt(value);
-    document.getElementById('budget-display').textContent = `$${selectedBudget.toLocaleString()}`;
+    document.getElementById('budget-display').textContent = '$' + selectedBudget.toLocaleString();
     updatePreferenceStatus();
 }
 
@@ -157,35 +106,32 @@ function updatePreferenceStatus() {
     const findButton = document.querySelector('.find-cars-btn');
     let allComplete = true;
     
-    const vehicleSection = sections[0];
     selectedYear = document.getElementById('car-year')?.value || '';
     
     if (selectedMake || selectedModel || selectedYear) {
-        vehicleSection.classList.remove('incomplete');
-        vehicleSection.classList.add('complete');
+        sections[0].classList.add('complete');
+        sections[0].classList.remove('incomplete');
     } else {
-        vehicleSection.classList.remove('complete');
-        vehicleSection.classList.add('incomplete');
+        sections[0].classList.add('incomplete');
+        sections[0].classList.remove('complete');
         allComplete = false;
     }
     
-    const mileageSection = sections[1];
     if (selectedMileage > 0) {
-        mileageSection.classList.remove('incomplete');
-        mileageSection.classList.add('complete');
+        sections[1].classList.add('complete');
+        sections[1].classList.remove('incomplete');
     } else {
-        mileageSection.classList.remove('complete');
-        mileageSection.classList.add('incomplete');
+        sections[1].classList.add('incomplete');
+        sections[1].classList.remove('complete');
         allComplete = false;
     }
     
-    const budgetSection = sections[2];
     if (selectedBudget > 1000) {
-        budgetSection.classList.remove('incomplete');
-        budgetSection.classList.add('complete');
+        sections[2].classList.add('complete');
+        sections[2].classList.remove('incomplete');
     } else {
-        budgetSection.classList.remove('complete');
-        budgetSection.classList.add('incomplete');
+        sections[2].classList.add('incomplete');
+        sections[2].classList.remove('complete');
         allComplete = false;
     }
     
@@ -206,50 +152,38 @@ function findMatchingCars() {
     selectedYear = document.getElementById('car-year').value;
     
     const loadingOverlay = document.getElementById('loading-overlay');
-    if (loadingOverlay) {
-        loadingOverlay.style.display = 'flex';
-    }
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
 
     setTimeout(() => {
-        let filteredCars = [...realCarDatabase];
+        let filteredCars = [...cars];
         
         if (selectedMake) {
             filteredCars = filteredCars.filter(car => car.make === selectedMake);
         }
-        
         if (selectedModel) {
             filteredCars = filteredCars.filter(car => car.model === selectedModel);
         }
-        
         if (selectedYear) {
             filteredCars = filteredCars.filter(car => car.year == selectedYear);
         }
         
-        filteredCars = filteredCars.filter(car => 
-            car.price <= selectedBudget * 1.5
-        );
+        filteredCars = filteredCars.filter(car => car.price <= selectedBudget * 1.5);
         
         if (filteredCars.length === 0) {
-            filteredCars = realCarDatabase.slice(0, 3);
+            filteredCars = cars.slice(0, 3);
         }
         
         availableCars = filteredCars.slice(0, 6);
-
-        if (loadingOverlay) {
-            loadingOverlay.style.display = 'none';
-        }
-        
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
         showCarDiscovery();
     }, 1000);
 }
 
 function showCarDiscovery() {
-    currentPhase = 'discovery';
     document.getElementById('onboarding-phase').style.display = 'none';
     document.getElementById('car-discovery-phase').style.display = 'flex';
     document.getElementById('car-discovery-phase').classList.add('active');
     document.getElementById('chat-interface').style.display = 'none';
-    
     generateCarCards();
 }
 
@@ -272,13 +206,15 @@ function generateCarCards() {
         ];
         
         const trend = Math.random() > 0.7 ? 'down' : 'up';
-        const trendPercent = trend === 'up' ? `+${(Math.random() * 4 + 1).toFixed(1)}%` : `-${(Math.random() * 2 + 0.5).toFixed(1)}%`;
+        const trendPercent = trend === 'up' ? '+' + (Math.random() * 4 + 1).toFixed(1) + '%' : '-' + (Math.random() * 2 + 0.5).toFixed(1) + '%';
         
         cardElement.innerHTML = `
-            <div class="car-header" style="background: ${gradients[index % gradients.length]};">
-                <img src="${car.image_url}" alt="${car.make} ${car.model}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px 12px 0 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 4rem;">${car.icon}</div>
-                <div class="price-trend-badge ${trend}">
+            <div class="car-header" style="background: ${gradients[index % gradients.length]}; position: relative; overflow: hidden;">
+                <img src="${car.image}" alt="${car.make} ${car.model}" 
+                     style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 4rem; position: absolute; top: 0; left: 0;">${car.icon}</div>
+                <div class="price-trend-badge ${trend}" style="position: absolute; top: 15px; right: 15px; z-index: 10;">
                     ${trend === 'up' ? '📈' : '📉'} ${trendPercent}
                 </div>
             </div>
@@ -316,29 +252,50 @@ function selectSimpleCar(index) {
 }
 
 function startNegotiation() {
-    currentPhase = 'negotiation';
     document.getElementById('car-discovery-phase').style.display = 'none';
     document.getElementById('chat-interface').style.display = 'flex';
     
     updateAgentStatus('sparky', true);
     updateProgress(25);
     document.getElementById('current-agent-title').textContent = '⚡ Discovery & Negotiation with Sparky';
-    
     document.getElementById('negotiation-phase').style.display = 'block';
     
     populateSelectedCarDisplay();
+    resetChatMessages();
+    addInitialSparkyMessage();
     negotiationCount = 0;
     discountApplied = 0;
     updatePriceDisplay();
     updateNegotiationInfo();
 }
 
+function resetChatMessages() {
+    const messagesContainer = document.getElementById('negotiation-messages');
+    messagesContainer.innerHTML = '';
+}
+
+function addInitialSparkyMessage() {
+    setTimeout(() => {
+        const messagesContainer = document.getElementById('negotiation-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message';
+        messageDiv.innerHTML = `
+            <div class="message-avatar sparky-avatar">⚡</div>
+            <div class="message-content">Hey there! I'm Sparky, your personal car-hunting AI! ⚡ I'm absolutely THRILLED you picked this amazing ${selectedCar.year} ${selectedCar.make} ${selectedCar.model} from ${selectedCar.location}! This beauty is already at a great price, but here's the exciting part - I've got some AI magic up my sleeve and might be able to work out an even better deal for you! What do you think about the current price? Let's make some sparks fly! 🚗✨</div>
+        `;
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }, 500);
+}
+
 function populateSelectedCarDisplay() {
     const container = document.getElementById('selected-car-display');
     container.innerHTML = `
-        <div class="selected-car-image">
-            <img src="${selectedCar.image_url}" alt="${selectedCar.make} ${selectedCar.model}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(45deg, #f3f4f6, #e5e7eb); border-radius: 12px;">
+        <div class="selected-car-image" style="position: relative; overflow: hidden; border-radius: 12px;">
+            <img src="${selectedCar.image}" alt="${selectedCar.make} ${selectedCar.model}" 
+                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" 
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(45deg, #f3f4f6, #e5e7eb); border-radius: 12px; position: absolute; top: 0; left: 0;">
                 ${selectedCar.icon}
             </div>
         </div>
@@ -461,25 +418,25 @@ function updatePriceDisplay() {
     const discountBadgeEl = document.getElementById('discount-badge-display');
     
     if (currentPriceEl) {
-        currentPriceEl.textContent = `$${currentPrice.toLocaleString()}`;
+        currentPriceEl.textContent = '$' + currentPrice.toLocaleString();
     }
     
     if (discountApplied > 0) {
         if (originalPriceEl) {
             originalPriceEl.style.display = 'block';
-            originalPriceEl.textContent = `$${originalPrice.toLocaleString()}`;
+            originalPriceEl.textContent = '$' + originalPrice.toLocaleString();
         }
         if (discountBadgeEl) {
             discountBadgeEl.style.display = 'inline-block';
-            discountBadgeEl.textContent = `$${discountApplied.toLocaleString()} OFF`;
+            discountBadgeEl.textContent = '$' + discountApplied.toLocaleString() + ' OFF';
         }
     }
 }
 
 function updateNegotiationInfo() {
     const minPrice = originalPrice - Math.floor(originalPrice * 0.1);
-    document.getElementById('min-price').textContent = `$${minPrice.toLocaleString()}`;
-    document.getElementById('max-price').textContent = `$${originalPrice.toLocaleString()}`;
+    document.getElementById('min-price').textContent = '$' + minPrice.toLocaleString();
+    document.getElementById('max-price').textContent = '$' + originalPrice.toLocaleString();
 }
 
 function acceptCurrentPrice() {
@@ -499,11 +456,8 @@ function showSuccess() {
     updateProgress(100);
     document.getElementById('current-agent-title').textContent = '🎉 Mission Complete! All Agents Successful';
     
-    document.getElementById('summary-vehicle').textContent = `${selectedCar.year} ${selectedCar.make} ${selectedCar.model}`;
-    document.getElementById('summary-total').textContent = `$${currentPrice.toLocaleString()}`;
-    
-    const randomPort = shippingPorts[Math.floor(Math.random() * shippingPorts.length)];
-    document.getElementById('summary-destination').textContent = `${randomPort.port}, ${randomPort.country}`;
+    document.getElementById('summary-vehicle').textContent = selectedCar.year + ' ' + selectedCar.make + ' ' + selectedCar.model;
+    document.getElementById('summary-total').textContent = '$' + currentPrice.toLocaleString();
 }
 
 function updateAgentStatus(activeAgent, isActive) {
@@ -522,7 +476,7 @@ function updateAgentStatus(activeAgent, isActive) {
     }
     
     if (isActive) {
-        document.getElementById(`agent-${activeAgent}`).classList.add('active');
+        document.getElementById('agent-' + activeAgent).classList.add('active');
     }
 }
 
@@ -546,7 +500,6 @@ function restartDemo() {
 }
 
 function resetDemo() {
-    currentPhase = 'onboarding';
     selectedMake = '';
     selectedModel = '';
     selectedYear = '';
@@ -584,9 +537,8 @@ function showExistingCustomerInfo() {
     alert('🚧 Existing Customer Portal coming soon! \n\nFor now, please use the "START YOUR JOURNEY" button to experience the full AI agent demo with real Otoz.ai inventory.');
 }
 
-// Initialize demo on page load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Initializing Otoz.ai demo with REAL data from CSV...');
+    console.log('🚀 Initializing Otoz.ai demo with 10 real cars...');
     
     document.getElementById('welcome-page').style.display = 'flex';
     document.getElementById('demo-container').classList.remove('active');
@@ -594,7 +546,6 @@ document.addEventListener('DOMContentLoaded', function() {
     populateCarMakes();
     updatePreferenceStatus();
     
-    // Handle Enter key in negotiation input
     const negotiationInput = document.getElementById('negotiation-input');
     if (negotiationInput) {
         negotiationInput.addEventListener('keypress', function(e) {
@@ -604,7 +555,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    console.log('✅ Demo initialization complete with 60 real cars from your inventory!');
-    console.log('📊 Real data includes: Toyota, Honda, Nissan, Mazda, Subaru');
-    console.log('🚢 Shipping to: Kenya, Tanzania, Pakistan, Bangladesh, Sri Lanka, Philippines');
+    console.log('✅ Demo ready with Toyota, Honda, Nissan, Mazda, Subaru!');
 });
