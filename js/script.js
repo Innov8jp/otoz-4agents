@@ -284,3 +284,54 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('❌ Error initializing demo. Please check the console for details.');
     }
 });
+
+
+// ===== CRITICAL FIX: Add Missing selectSimpleCar Function =====
+function selectSimpleCar(carId) {
+    console.log('🚗 Selecting simple car:', carId);
+    
+    // Define the cars that match your HTML
+    const simpleCars = {
+        1: {
+            id: 1, make: 'Toyota', model: 'Camry', year: '2020', 
+            name: '2020 Toyota Camry', icon: '🚗', mileage: 35000, 
+            price: 22000, vin: 'TC2020001', engine: '2.5L I4', 
+            transmission: 'Automatic', fuelType: 'Gasoline', seats: '5 Seats',
+            trend: 'up', trendPercent: '+3.2%', location: 'Tokyo, Japan', condition: 'Excellent'
+        },
+        2: {
+            id: 2, make: 'Honda', model: 'Accord', year: '2019',
+            name: '2019 Honda Accord', icon: '🚙', mileage: 42000,
+            price: 20500, vin: 'HA2019002', engine: '1.5L Turbo',
+            transmission: 'CVT', fuelType: 'Gasoline', seats: '5 Seats',
+            trend: 'up', trendPercent: '+2.8%', location: 'Tokyo, Japan', condition: 'Excellent'
+        },
+        3: {
+            id: 3, make: 'BMW', model: '3 Series', year: '2020',
+            name: '2020 BMW 3 Series', icon: '🏎️', mileage: 28000,
+            price: 32000, vin: 'BMW2020003', engine: '2.0L Turbo',
+            transmission: 'Automatic', fuelType: 'Gasoline', seats: '5 Seats',
+            trend: 'up', trendPercent: '+4.1%', location: 'Tokyo, Japan', condition: 'Excellent'
+        }
+    };
+    
+    selectedCar = simpleCars[carId];
+    if (!selectedCar) {
+        console.error('❌ Car not found:', carId);
+        alert('Car not found! Please try again.');
+        return;
+    }
+    
+    originalPrice = selectedCar.price;
+    currentPrice = selectedCar.price;
+    discountApplied = 0;
+    
+    console.log('✅ Selected car:', selectedCar);
+    startNegotiation();
+}
+
+// ===== FIX: Add Pass Function =====
+function passSimpleCar(carId) {
+    console.log('❌ Passed car:', carId);
+    alert('Car passed! Try selecting another one.');
+}
