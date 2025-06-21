@@ -4,12 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Otoz.ai - The Future of Cross-Border Vehicle Trading</title>
+    <!-- Link to your CSS file -->
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Notification Popup -->
+    <div class="notification-overlay" id="notification-overlay">
+        <div class="notification-popup" id="notification-popup">
+            <div class="notification-header">
+                <span class="notification-icon" id="notification-icon">⚠️</span>
+                <div class="notification-title" id="notification-title">Please Complete Your Preferences</div>
+            </div>
+            <div class="notification-message" id="notification-message">
+                Please make sure to select all your preferences before we can find your perfect cars.
+            </div>
+            <div class="validation-list" id="validation-list" style="display: none;">
+                <!-- Validation items will be inserted here -->
+            </div>
+            <div class="notification-actions">
+                <button class="notification-btn notification-btn-primary" onclick="closeNotification()">Got It!</button>
+            </div>
+        </div>
     </div>
 
     <!-- Welcome Page -->
@@ -28,7 +48,7 @@
 
         <div class="hero-content">
             <div class="company-logo">
-                <!-- Enhanced Otoz.ai Logo SVG -->
+                <!-- Otoz.ai Logo SVG -->
                 <svg class="otoz-logo" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -98,44 +118,11 @@
                 </div>
             </div>
 
-            <!-- Enhanced Revolving Agent Hero Section -->
-            <div class="agent-hero-container">
-                <div class="agent-carousel">
-                    <div class="agent-hero-card" style="--rotation: 0deg;">
-                        <div class="agent-big-avatar sparky-avatar">⚡</div>
-                        <div class="agent-hero-name">Sparky</div>
-                        <div class="agent-hero-role">Discovery & Negotiation Expert</div>
-                    </div>
-                    
-                    <div class="agent-hero-card" style="--rotation: 90deg;">
-                        <div class="agent-big-avatar inspector-avatar">🔍</div>
-                        <div class="agent-hero-name">Inspector</div>
-                        <div class="agent-hero-role">Quality Assurance Specialist</div>
-                    </div>
-                    
-                    <div class="agent-hero-card" style="--rotation: 180deg;">
-                        <div class="agent-big-avatar penny-avatar">💎</div>
-                        <div class="agent-hero-name">Penny</div>
-                        <div class="agent-hero-role">Payment & Billing Wizard</div>
-                    </div>
-                    
-                    <div class="agent-hero-card" style="--rotation: 270deg;">
-                        <div class="agent-big-avatar captain-avatar">🌊</div>
-                        <div class="agent-hero-name">Captain</div>
-                        <div class="agent-hero-role">Global Shipping Commander</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="agent-selection-hint">
-                🎮 Watch your AI team revolve • Each agent specializes in different aspects of your car buying journey
-            </div>
-
             <div class="game-start-controls">
                 <button class="start-game-btn" onclick="startDemo()">
                     🚀 START YOUR JOURNEY
                 </button>
-                <button class="existing-customer-btn" onclick="showExistingCustomerInfo()">
+                <button class="existing-customer-btn" onclick="showExistingCustomerPortal()">
                     👤 EXISTING CUSTOMER
                 </button>
             </div>
@@ -144,39 +131,39 @@
 
     <!-- Demo Container -->
     <div class="demo-container" id="demo-container">
-        <!-- Enhanced Onboarding Phase -->
+        <!-- Onboarding Phase -->
         <div class="onboarding-container" id="onboarding-phase">
             <div class="onboarding-content">
                 <div class="onboarding-title">🤖 Hi! I'm Sparky, Your AI Car Expert</div>
                 <div class="onboarding-subtitle">Let me find the perfect car for you! Tell me your preferences...</div>
                 
                 <div class="preference-cards">
-                    <!-- Enhanced Vehicle Selection -->
+                    <!-- Vehicle Selection -->
                     <div class="preference-section">
                         <div class="preference-title">🚗 Select Your Preferred Vehicle</div>
-                        <div class="vehicle-selection-grid">
-                            <div class="form-group">
-                                <label class="form-label">Make</label>
-                                <select class="form-select" id="car-make" onchange="updateModelOptions()">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; font-weight: 600; color: white; margin-bottom: 8px; font-size: 14px;">Make</label>
+                                <select class="form-select" id="car-make" onchange="updateModelOptions()" style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 12px; border-radius: 12px; width: 100%;">
                                     <option value="">Any Make</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Model</label>
-                                <select class="form-select" id="car-model" onchange="updateYearOptions()">
+                            <div>
+                                <label style="display: block; font-weight: 600; color: white; margin-bottom: 8px; font-size: 14px;">Model</label>
+                                <select class="form-select" id="car-model" onchange="updateYearOptions()" style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 12px; border-radius: 12px; width: 100%;">
                                     <option value="">Any Model</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Year</label>
-                                <select class="form-select" id="car-year" onchange="updatePreferenceStatus()">
+                            <div>
+                                <label style="display: block; font-weight: 600; color: white; margin-bottom: 8px; font-size: 14px;">Year</label>
+                                <select class="form-select" id="car-year" onchange="updatePreferenceStatus()" style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 12px; border-radius: 12px; width: 100%;">
                                     <option value="">Any Year</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Enhanced Mileage Range -->
+                    <!-- Mileage Range -->
                     <div class="preference-section">
                         <div class="preference-title">📏 Preferred mileage range?</div>
                         <div class="range-slider-container">
@@ -189,7 +176,7 @@
                         </div>
                     </div>
 
-                    <!-- Enhanced Budget Range -->
+                    <!-- Budget Range -->
                     <div class="preference-section">
                         <div class="preference-title">💰 What's your budget?</div>
                         <div class="range-slider-container">
@@ -203,22 +190,90 @@
                     </div>
                 </div>
 
-                <button class="find-cars-btn" onclick="findMatchingCars()">
+                <button class="find-cars-btn" onclick="findMatchingCars();">
                     ⚡ Find My Perfect Cars
                 </button>
             </div>
         </div>
 
-        <!-- Enhanced Car Discovery Phase -->
+        <!-- Car Discovery Phase -->
         <div class="car-discovery-container" id="car-discovery-phase">
             <div class="discovery-header">
                 <div class="discovery-title">🎯 Choose Your Perfect Car!</div>
                 <div class="discovery-subtitle">Click the car you like to start negotiating with Sparky!</div>
             </div>
             
-            <div style="display: flex; justify-content: center; align-items: center; min-height: 400px; padding: 20px;">
-                <div class="simple-car-grid" id="simple-car-grid">
-                    <!-- Enhanced Car Cards will be generated here -->
+            <div style="display: flex; justify-content: center; align-items: center; min-height: 400px; padding: 20px; max-width: 1000px; margin: 0 auto;">
+                <!-- Simple Car Grid -->
+                <div id="simple-car-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; width: 100%; max-width: 900px;">
+                    <!-- Car 1: Toyota Camry -->
+                    <div class="simple-car-card" onclick="selectSimpleCar(1)">
+                        <div style="height: 120px; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; position: relative;">
+                            🚗
+                            <div style="position: absolute; top: 10px; right: 10px; background: rgba(34, 197, 94, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">📈 +3.2%</div>
+                        </div>
+                        
+                        <div style="padding: 20px; text-align: center;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 1.2rem; font-weight: 700; color: #1e293b;">
+                                2020 Toyota Camry
+                            </h3>
+                            <div style="color: #64748b; font-size: 0.9rem; margin-bottom: 8px;">
+                                35,000 km • 2.5L I4 • Automatic
+                            </div>
+                            <div style="font-size: 1.8rem; font-weight: 900; color: #667eea; margin: 15px 0;">
+                                $22,000
+                            </div>
+                            <div style="background: #f0f4ff; color: #4338ca; padding: 8px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block;">
+                                ⚡ Click to negotiate with Sparky!
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Car 2: Honda Accord -->
+                    <div class="simple-car-card" onclick="selectSimpleCar(2)">
+                        <div style="height: 120px; background: linear-gradient(135deg, #22c55e, #16a34a); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; position: relative;">
+                            🚙
+                            <div style="position: absolute; top: 10px; right: 10px; background: rgba(34, 197, 94, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">📈 +2.8%</div>
+                        </div>
+                        
+                        <div style="padding: 20px; text-align: center;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 1.2rem; font-weight: 700; color: #1e293b;">
+                                2019 Honda Accord
+                            </h3>
+                            <div style="color: #64748b; font-size: 0.9rem; margin-bottom: 8px;">
+                                42,000 km • 1.5L Turbo • CVT
+                            </div>
+                            <div style="font-size: 1.8rem; font-weight: 900; color: #22c55e; margin: 15px 0;">
+                                $20,500
+                            </div>
+                            <div style="background: #f0fdf4; color: #166534; padding: 8px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block;">
+                                ⚡ Click to negotiate with Sparky!
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Car 3: BMW 3 Series -->
+                    <div class="simple-car-card" onclick="selectSimpleCar(3)">
+                        <div style="height: 120px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; position: relative;">
+                            🏎️
+                            <div style="position: absolute; top: 10px; right: 10px; background: rgba(34, 197, 94, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">📈 +4.1%</div>
+                        </div>
+                        
+                        <div style="padding: 20px; text-align: center;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 1.2rem; font-weight: 700; color: #1e293b;">
+                                2020 BMW 3 Series
+                            </h3>
+                            <div style="color: #64748b; font-size: 0.9rem; margin-bottom: 8px;">
+                                28,000 km • 2.0L Turbo • Automatic
+                            </div>
+                            <div style="font-size: 1.8rem; font-weight: 900; color: #f59e0b; margin: 15px 0;">
+                                $32,000
+                            </div>
+                            <div style="background: #fffbeb; color: #92400e; padding: 8px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block;">
+                                ⚡ Click to negotiate with Sparky!
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -227,7 +282,7 @@
             </div>
         </div>
 
-        <!-- Enhanced Chat Interface -->
+        <!-- Chat Interface (Negotiation, Invoice, Shipping) -->
         <div style="display: none; width: 100%; height: 100%;" id="chat-interface">
             <div class="sidebar">
                 <div class="logo">
@@ -251,28 +306,28 @@
                     <h4 style="margin-bottom: 15px; color: #334155;">Your AI Team</h4>
                     
                     <div class="agent-card active" id="agent-sparky">
-                        <div class="agent-avatar sparky-avatar">⚡</div>
+                        <div class="agent-avatar" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white;">⚡</div>
                         <div class="agent-name">Sparky</div>
                         <div class="agent-role">Discovery & Negotiation</div>
                         <div class="agent-tagline">Your energetic car finder!</div>
                     </div>
                     
-                    <div class="agent-card" id="agent-inspector">
-                        <div class="agent-avatar inspector-avatar">🔍</div>
-                        <div class="agent-name">Inspector</div>
-                        <div class="agent-role">Pre-Export Inspection</div>
-                        <div class="agent-tagline">Quality guarantee</div>
-                    </div>
-                    
                     <div class="agent-card" id="agent-penny">
-                        <div class="agent-avatar penny-avatar">💎</div>
+                        <div class="agent-avatar" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">💎</div>
                         <div class="agent-name">Penny</div>
                         <div class="agent-role">Payment & Billing</div>
                         <div class="agent-tagline">Financial wizard</div>
                     </div>
                     
+                    <div class="agent-card" id="agent-inspector">
+                        <div class="agent-avatar" style="background: linear-gradient(135deg, #06b6d4, #0891b2); color: white;">🔍</div>
+                        <div class="agent-name">Inspector</div>
+                        <div class="agent-role">Pre-Export Inspection</div>
+                        <div class="agent-tagline">Quality guarantee</div>
+                    </div>
+                    
                     <div class="agent-card" id="agent-captain">
-                        <div class="agent-avatar captain-avatar">🌊</div>
+                        <div class="agent-avatar" style="background: linear-gradient(135deg, #059669, #047857); color: white;">🌊</div>
                         <div class="agent-name">Captain</div>
                         <div class="agent-role">Logistics & Delivery</div>
                         <div class="agent-tagline">Global shipping expert</div>
@@ -292,12 +347,12 @@
             <div class="main-content">
                 <div class="header">
                     <button class="back-btn" onclick="goBack()">← Back to Home</button>
-                    <h2 id="current-agent-title">Discovery & Negotiation with Sparky</h2>
+                    <h2 id="current-agent-title">⚡ Discovery & Negotiation with Sparky</h2>
                     <div class="demo-badge">Live Demo</div>
                 </div>
                 
                 <div class="chat-area">
-                    <!-- Enhanced Negotiation Phase -->
+                    <!-- Negotiation Phase -->
                     <div class="negotiation-phase" id="negotiation-phase">
                         <div class="selected-car-display" id="selected-car-display">
                             <!-- Selected car details will be populated here -->
@@ -313,7 +368,7 @@
                         
                         <div class="chat-messages" id="negotiation-messages">
                             <div class="message">
-                                <div class="message-avatar sparky-avatar">⚡</div>
+                                <div class="message-avatar" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white;">⚡</div>
                                 <div class="message-content">Hey there! I'm Sparky, your personal car-hunting AI! ⚡ I'm absolutely THRILLED you picked this amazing ride! This beauty is already at a great price, but here's the exciting part - I've got some AI magic up my sleeve and might be able to work out an even better deal for you! What do you think about the current price? Let's make some sparks fly! 🚗✨</div>
                             </div>
                             
@@ -335,65 +390,80 @@
                             <button class="btn btn-primary" onclick="acceptCurrentPrice()" id="accept-btn">✅ Accept Deal</button>
                         </div>
                     </div>
-
-                    <!-- Success Phase -->
-                    <div id="success-phase" style="display: none;">
-                        <div class="success-animation">
-                            <div class="checkmark">✅</div>
-                            <div class="success-title">Mission Complete! 🎉</div>
-                            <div class="success-message">
-                                Congratulations! Your 4-agent AI team has successfully coordinated your vehicle purchase, inspection, payment, and shipping.
-                            </div>
-                            
-                            <div class="order-summary">
-                                <h4 style="color: #1e293b; margin-bottom: 15px;">📦 Order Summary</h4>
-                                <div class="summary-row">
-                                    <span>Vehicle:</span>
-                                    <strong id="summary-vehicle">-</strong>
-                                </div>
-                                <div class="summary-row">
-                                    <span>Total Paid:</span>
-                                    <strong id="summary-total">$22,000</strong>
-                                </div>
-                                <div class="summary-row">
-                                    <span>Shipping Terms:</span>
-                                    <strong id="summary-terms">FOB</strong>
-                                </div>
-                                <div class="summary-row">
-                                    <span>Destination:</span>
-                                    <strong id="summary-destination">Customer Port</strong>
-                                </div>
-                                <div class="summary-row">
-                                    <span>ETA:</span>
-                                    <strong>20 business days</strong>
-                                </div>
-                                <div class="summary-row">
-                                    <span>Tracking ID:</span>
-                                    <strong>OTOZ-TRK-789456</strong>
-                                </div>
-                            </div>
-                            
-                            <div style="background: #f0f4ff; border: 1px solid #c7d2fe; border-radius: 15px; padding: 20px; margin: 20px 0; text-align: left;">
-                                <h4 style="color: #4338ca; margin-bottom: 15px;">🤖 Your AI Team Journey:</h4>
-                                <div style="color: #4338ca; font-size: 14px; line-height: 1.6;">
-                                    <div style="margin-bottom: 8px;"><strong>⚡ Sparky:</strong> Found and negotiated your perfect car</div>
-                                    <div style="margin-bottom: 8px;"><strong>🔍 Inspector:</strong> Verified quality with 127-point inspection</div>
-                                    <div style="margin-bottom: 8px;"><strong>💎 Penny:</strong> Processed payment and documentation</div>
-                                    <div><strong>🌊 Captain:</strong> Coordinated global shipping logistics</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="action-buttons">
-                            <button class="btn btn-primary" onclick="restartDemo()">🔄 Try Another Demo</button>
-                            <button class="btn btn-secondary" onclick="goBack()">🏠 Back to Home</button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="js/script.js"></script>
+    <!-- Customer Information Popup -->
+    <div class="popup-overlay" id="customer-info-popup">
+        <div class="customer-info-popup">
+            <div class="popup-header">
+                <h3>📋 Customer Information & Shipping Terms</h3>
+                <p>Please provide your details for the Bill of Lading and select your preferred shipping terms</p>
+            </div>
+            
+            <form id="customer-info-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" class="form-input" id="customer-name" placeholder="Enter your full name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Email Address *</label>
+                        <input type="email" class="form-input" id="customer-email" placeholder="your@email.com" required>
+                    </div>
+                </div>
+                
+                <div class="popup-actions">
+                    <button type="button" class="popup-btn popup-btn-secondary" onclick="closeCustomerInfoForm()">Cancel</button>
+                    <button type="submit" class="popup-btn popup-btn-primary">Generate Invoice</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Existing Customer Portal -->
+    <div class="popup-overlay" id="existing-customer-portal">
+        <div class="customer-info-popup" style="max-width: 500px;">
+            <div class="popup-header">
+                <h3>🎯 Existing Customer Portal</h3>
+                <p>Access your AI agents for order updates and support</p>
+            </div>
+            
+            <div style="margin: 25px 0;">
+                <div class="form-group">
+                    <label class="form-label">Vehicle ID / Order Number</label>
+                    <input type="text" class="form-input" id="customer-vehicle-id" placeholder="Enter your vehicle ID or order number" style="color: #1e293b;">
+                </div>
+            </div>
+            
+            <div style="margin: 25px 0;">
+                <h4 style="color: #1e293b; margin-bottom: 15px;">🤖 Select Your AI Agent</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <button onclick="accessAgent('sparky')" style="padding: 15px; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
+                        👨‍💼 Sparky<br><small>Negotiation Status</small>
+                    </button>
+                    <button onclick="accessAgent('inspector')" style="padding: 15px; background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
+                        👩‍🔬 Inspector<br><small>Quality Report</small>
+                    </button>
+                    <button onclick="accessAgent('penny')" style="padding: 15px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
+                        👩‍💼 Penny<br><small>Payment Status</small>
+                    </button>
+                    <button onclick="accessAgent('captain')" style="padding: 15px; background: linear-gradient(135deg, #059669, #047857); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
+                        👨‍✈️ Captain<br><small>Shipping Tracker</small>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="popup-actions">
+                <button type="button" class="popup-btn popup-btn-secondary" onclick="closeExistingCustomerPortal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link to your JavaScript file -->
+    <script src="js/main.js"></script>
 </body>
 </html>
