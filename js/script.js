@@ -1,4 +1,7 @@
-// Global state management
+// COMPLETE WORKING OTOZ.AI SCRIPT - COPY THIS ENTIRE FILE
+// ================================================================
+
+// Global state management - MUST BE AT TOP
 let currentPhase = 'onboarding';
 let selectedMake = '';
 let selectedModel = '';
@@ -16,7 +19,7 @@ let selectedShippingTerms = 'FOB';
 let customerInfo = {};
 let isExistingCustomer = false;
 
-// Initialize car database
+// Initialize car database array
 const carDatabase = [];
 
 // Top Car Manufacturers and their models
@@ -30,9 +33,12 @@ const carMakers = {
     'Audi': ['A3', 'A4', 'A6', 'A8', 'Q3', 'Q5', 'Q7', 'Q8', 'TT', 'R8']
 };
 
-// Generate comprehensive car database with multiple variants
+// ================================================================
+// CAR DATABASE INITIALIZATION - MULTIPLE VARIANTS FOR TESTING
+// ================================================================
+
 function initializeCarDatabase() {
-    carDatabase.length = 0;
+    carDatabase.length = 0; // Clear existing
     let carIdCounter = 1;
 
     const guaranteedCars = [
@@ -101,7 +107,10 @@ function initializeCarDatabase() {
     console.log(`✅ Car database initialized with ${carDatabase.length} vehicles (${guaranteedCars.length} variants)`);
 }
 
-// Start demo function
+// ================================================================
+// CORE DEMO FUNCTIONS
+// ================================================================
+
 function startDemo() {
     console.log('🚀 Starting demo...');
     document.getElementById('welcome-page').style.display = 'none';
@@ -109,7 +118,6 @@ function startDemo() {
     showOnboarding();
 }
 
-// Show onboarding phase
 function showOnboarding() {
     currentPhase = 'onboarding';
     document.getElementById('onboarding-phase').style.display = 'flex';
@@ -122,7 +130,10 @@ function showOnboarding() {
     }, 100);
 }
 
-// Populate car makes dropdown
+// ================================================================
+// CAR PREFERENCE FUNCTIONS
+// ================================================================
+
 function populateCarMakes() {
     const makeSelect = document.getElementById('car-make');
     if (!makeSelect) return;
@@ -179,7 +190,6 @@ function updateYearOptions() {
     updatePreferenceStatus();
 }
 
-// Update range displays
 function updateMileageDisplay(value) {
     selectedMileage = parseInt(value);
     const display = document.getElementById('mileage-display');
@@ -198,7 +208,6 @@ function updateBudgetDisplay(value) {
     updatePreferenceStatus();
 }
 
-// Update preference section visual indicators
 function updatePreferenceStatus() {
     const sections = document.querySelectorAll('.preference-section');
     const findButton = document.querySelector('.find-cars-btn');
@@ -249,7 +258,10 @@ function updatePreferenceStatus() {
     }
 }
 
-// Find matching cars with enhanced filtering for multiple variants
+// ================================================================
+// CAR SEARCH AND DISCOVERY FUNCTIONS
+// ================================================================
+
 function findMatchingCars() {
     console.log('🔍 Starting car search...');
     
@@ -315,7 +327,7 @@ function findMatchingCars() {
             currentCarIndex = 0;
             
             console.log(`✅ Final cars for display: ${availableCars.length}`);
-            console.log('🚗 Cars to show:', availableCars.map(car => `${car.name} - ${car.price.toLocaleString()}`));
+            console.log('🚗 Cars to show:', availableCars.map(car => `${car.name} - $${car.price.toLocaleString()}`));
             
             if (loadingOverlay) {
                 loadingOverlay.style.display = 'none';
@@ -333,7 +345,6 @@ function findMatchingCars() {
     }, 800);
 }
 
-// Show car discovery phase with dynamic car generation
 function showCarDiscovery() {
     console.log('🎯 Showing car discovery phase...');
     
@@ -360,7 +371,6 @@ function showCarDiscovery() {
     generateDynamicCarGrid();
 }
 
-// Generate dynamic car grid from available cars
 function generateDynamicCarGrid() {
     const simpleGrid = document.getElementById('simple-car-grid');
     if (!simpleGrid) {
@@ -407,7 +417,7 @@ function generateDynamicCarGrid() {
                     </div>
                     ${car.trim ? `<div style="color: #667eea; font-size: 0.8rem; font-weight: 600; margin-bottom: 8px;">Trim: ${car.trim}</div>` : ''}
                     <div style="font-size: 1.6rem; font-weight: 900; color: ${getCarPriceColor(car.make, index)}; margin: 15px 0;">
-                        ${car.price?.toLocaleString() || '0'}
+                        $${car.price?.toLocaleString() || '0'}
                     </div>
                     <div class="action-buttons" style="display: flex; gap: 8px; justify-content: space-between;">
                         <button onclick="passSimpleCar(${car.id})" style="flex: 1; padding: 10px 8px; background: #fee2e2; color: #dc2626; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 0.8rem;">
@@ -426,7 +436,7 @@ function generateDynamicCarGrid() {
     console.log(`✅ Generated dynamic car grid with ${carsToShow.length} cars`);
 }
 
-// Helper function to get car gradient based on make
+// Helper functions for car display
 function getCarGradient(make, index) {
     const gradients = {
         'Toyota': 'linear-gradient(135deg, #667eea, #764ba2)',
@@ -438,7 +448,6 @@ function getCarGradient(make, index) {
     return gradients[make] || `linear-gradient(135deg, #64748b, #475569)`;
 }
 
-// Helper function to get car price color
 function getCarPriceColor(make, index) {
     const colors = {
         'Toyota': '#667eea',
@@ -450,7 +459,170 @@ function getCarPriceColor(make, index) {
     return colors[make] || '#64748b';
 }
 
-// Start negotiation phase
+function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+// ================================================================
+// CAR SELECTION AND PASS FUNCTIONS
+// ================================================================
+
+function selectSimpleCar(carId) {
+    console.log('🚗 Selecting car with ID:', carId);
+    
+    // Find car from database by ID
+    selectedCar = carDatabase.find(car => car.id === carId);
+    
+    if (!selectedCar) {
+        // Fallback to availableCars if not found in database
+        selectedCar = availableCars.find(car => car.id === carId);
+    }
+    
+    if (!selectedCar) {
+        console.error('❌ Car not found with ID:', carId);
+        alert('Car not found! Please try again.');
+        return;
+    }
+    
+    originalPrice = selectedCar.price;
+    currentPrice = selectedCar.price;
+    discountApplied = 0;
+    
+    console.log('✅ Selected car:', selectedCar);
+    
+    // Add visual feedback
+    const cardElement = document.getElementById(`car-card-${carId}`);
+    if (cardElement) {
+        cardElement.style.transform = 'scale(1.05)';
+        cardElement.style.border = '3px solid #22c55e';
+        cardElement.style.boxShadow = '0 10px 30px rgba(34, 197, 94, 0.3)';
+        
+        setTimeout(() => {
+            startNegotiation();
+        }, 500);
+    } else {
+        startNegotiation();
+    }
+}
+
+function passSimpleCar(carId) {
+    console.log('❌ Passing car with ID:', carId);
+    
+    // Find the car element
+    const cardElement = document.getElementById(`car-card-${carId}`);
+    if (!cardElement) {
+        console.error('❌ Card element not found for car ID:', carId);
+        return;
+    }
+    
+    // Add exit animation
+    cardElement.style.transform = 'translateX(-100vw) rotate(-15deg)';
+    cardElement.style.opacity = '0';
+    cardElement.style.transition = 'all 0.5s ease';
+    
+    // Remove from available cars array
+    availableCars = availableCars.filter(car => car.id !== carId);
+    
+    setTimeout(() => {
+        // Remove from DOM
+        cardElement.remove();
+        
+        // Update title to reflect remaining cars
+        const titleElement = document.querySelector('.discovery-title');
+        if (titleElement) {
+            titleElement.textContent = `🎯 ${availableCars.length} Cars Remaining - Choose Your Favorite!`;
+        }
+        
+        // Check if any cars left
+        const remainingCards = document.querySelectorAll('.dynamic-car-card');
+        if (remainingCards.length === 0) {
+            showNoMoreCarsMessage();
+        }
+        
+        console.log(`✅ Car ${carId} removed. ${availableCars.length} cars remaining.`);
+        
+    }, 500);
+}
+
+function showNoMoreCarsMessage() {
+    const simpleGrid = document.getElementById('simple-car-grid');
+    if (simpleGrid) {
+        simpleGrid.innerHTML = `
+            <div style="
+                grid-column: 1 / -1;
+                text-align: center;
+                padding: 40px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 15px;
+                color: white;
+                animation: slideInUp 0.5s ease;
+            ">
+                <div style="font-size: 4rem; margin-bottom: 20px;">😅</div>
+                <h3 style="margin-bottom: 15px;">Oops! You've passed all the cars!</h3>
+                <p style="margin-bottom: 20px; opacity: 0.9;">Don't worry - let's find you more options by adjusting your preferences.</p>
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="goBackToPreferences()" style="
+                        background: #667eea;
+                        color: white;
+                        border: none;
+                        padding: 12px 24px;
+                        border-radius: 25px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        🔄 Adjust Preferences
+                    </button>
+                    <button onclick="findMoreCars()" style="
+                        background: #22c55e;
+                        color: white;
+                        border: none;
+                        padding: 12px 24px;
+                        border-radius: 25px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        🔍 Find More Cars
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function findMoreCars() {
+    console.log('🔍 Finding more cars...');
+    
+    // Reset available cars to show different ones
+    const allCars = [...carDatabase];
+    availableCars = shuffleArray(allCars).slice(0, 6); // Show 6 random cars
+    
+    // Update title
+    const titleElement = document.querySelector('.discovery-title');
+    if (titleElement) {
+        titleElement.textContent = `🎯 Found ${availableCars.length} More Amazing Cars!`;
+    }
+    
+    // Regenerate the grid
+    generateDynamicCarGrid();
+    
+    // Add some visual feedback
+    const simpleGrid = document.getElementById('simple-car-grid');
+    if (simpleGrid) {
+        simpleGrid.style.animation = 'slideInUp 0.5s ease';
+    }
+}
+
+// ================================================================
+// NEGOTIATION FUNCTIONS
+// ================================================================
+
 function startNegotiation() {
     console.log('🚀 Starting negotiation...');
     currentPhase = 'negotiation';
@@ -459,7 +631,7 @@ function startNegotiation() {
     
     updateAgentStatus('sparky', true);
     updateProgress(25);
-    document.getElementById('current-agent-title').textContent = '🚀 Discovering with Sparky';
+    document.getElementById('current-agent-title').textContent = '🚀 Negotiation with Sparky';
     
     document.getElementById('negotiation-phase').style.display = 'block';
     populateSelectedCarDisplay();
@@ -526,7 +698,6 @@ function updateNegotiationInfo() {
     if (maxPriceEl) maxPriceEl.textContent = `$${originalPrice.toLocaleString()}`;
 }
 
-// Negotiation functions
 function sendNegotiationMessage() {
     const input = document.getElementById('negotiation-input');
     const message = input?.value?.trim();
@@ -623,6 +794,10 @@ function acceptCurrentPrice() {
     addAIResponse("Fantastic! 🎉 Thank you for choosing Otoz.ai! In the full app, you would now proceed to Inspector for quality check, then to Penny for payment, and finally to Captain for shipping. This demo shows the AI negotiation capabilities! ⚡", 'negotiation-messages', 1000);
 }
 
+// ================================================================
+// UTILITY AND NAVIGATION FUNCTIONS
+// ================================================================
+
 function updateAgentStatus(activeAgent, isActive) {
     document.querySelectorAll('.agent-card').forEach(card => {
         card.classList.remove('active', 'completed');
@@ -639,7 +814,6 @@ function updateProgress(percentage) {
     if (progressEl) progressEl.style.width = percentage + '%';
 }
 
-// Navigation functions
 function goBack() {
     document.getElementById('welcome-page').style.display = 'flex';
     document.getElementById('demo-container').classList.remove('active');
@@ -649,7 +823,6 @@ function goBackToPreferences() {
     showOnboarding();
 }
 
-// Existing customer functions
 function showExistingCustomerPortal() {
     const portal = document.getElementById('existing-customer-portal');
     if (portal) portal.classList.add('active');
@@ -674,7 +847,6 @@ function accessAgent(agentType) {
     alert(`🤖 ${agentType.toUpperCase()} Agent accessed for Vehicle ID: ${vehicleId}\n\nIn the full app, this would show detailed status information for your order.`);
 }
 
-// Form functions
 function closeCustomerInfoForm() {
     const popup = document.getElementById('customer-info-popup');
     if (popup) popup.classList.remove('active');
@@ -685,174 +857,18 @@ function closeNotification() {
     if (overlay) overlay.classList.remove('active');
 }
 
-// ===== ENHANCED: selectSimpleCar Function with Dynamic Car Database =====
-function selectSimpleCar(carId) {
-    console.log('🚗 Selecting car with ID:', carId);
-    
-    // Find car from database by ID
-    selectedCar = carDatabase.find(car => car.id === carId);
-    
-    if (!selectedCar) {
-        // Fallback to availableCars if not found in database
-        selectedCar = availableCars.find(car => car.id === carId);
-    }
-    
-    if (!selectedCar) {
-        console.error('❌ Car not found with ID:', carId);
-        alert('Car not found! Please try again.');
-        return;
-    }
-    
-    originalPrice = selectedCar.price;
-    currentPrice = selectedCar.price;
-    discountApplied = 0;
-    
-    console.log('✅ Selected car:', selectedCar);
-    
-    // Add visual feedback
-    const cardElement = document.getElementById(`car-card-${carId}`);
-    if (cardElement) {
-        cardElement.style.transform = 'scale(1.05)';
-        cardElement.style.border = '3px solid #22c55e';
-        cardElement.style.boxShadow = '0 10px 30px rgba(34, 197, 94, 0.3)';
-        
-        setTimeout(() => {
-            startNegotiation();
-        }, 500);
-    } else {
-        startNegotiation();
-    }
-}
+// ================================================================
+// INITIALIZATION - MUST BE AT THE END
+// ================================================================
 
-// ===== ENHANCED: passSimpleCar Function with Dynamic Removal =====
-function passSimpleCar(carId) {
-    console.log('❌ Passing car with ID:', carId);
-    
-    // Find the car element
-    const cardElement = document.getElementById(`car-card-${carId}`);
-    if (!cardElement) {
-        console.error('❌ Card element not found for car ID:', carId);
-        return;
-    }
-    
-    // Add exit animation
-    cardElement.style.transform = 'translateX(-100vw) rotate(-15deg)';
-    cardElement.style.opacity = '0';
-    cardElement.style.transition = 'all 0.5s ease';
-    
-    // Remove from available cars array
-    availableCars = availableCars.filter(car => car.id !== carId);
-    
-    setTimeout(() => {
-        // Remove from DOM
-        cardElement.remove();
-        
-        // Update title to reflect remaining cars
-        const titleElement = document.querySelector('.discovery-title');
-        if (titleElement) {
-            titleElement.textContent = `🎯 ${availableCars.length} Cars Remaining - Choose Your Favorite!`;
-        }
-        
-        // Check if any cars left
-        const remainingCards = document.querySelectorAll('.dynamic-car-card');
-        if (remainingCards.length === 0) {
-            showNoMoreCarsMessage();
-        }
-        
-        console.log(`✅ Car ${carId} removed. ${availableCars.length} cars remaining.`);
-        
-    }, 500);
-}
-
-// Show message when no more cars are available
-function showNoMoreCarsMessage() {
-    const simpleGrid = document.getElementById('simple-car-grid');
-    if (simpleGrid) {
-        simpleGrid.innerHTML = `
-            <div style="
-                grid-column: 1 / -1;
-                text-align: center;
-                padding: 40px;
-                background: rgba(255,255,255,0.1);
-                border-radius: 15px;
-                color: white;
-                animation: slideInUp 0.5s ease;
-            ">
-                <div style="font-size: 4rem; margin-bottom: 20px;">😅</div>
-                <h3 style="margin-bottom: 15px;">Oops! You've passed all the cars!</h3>
-                <p style="margin-bottom: 20px; opacity: 0.9;">Don't worry - let's find you more options by adjusting your preferences.</p>
-                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <button onclick="goBackToPreferences()" style="
-                        background: #667eea;
-                        color: white;
-                        border: none;
-                        padding: 12px 24px;
-                        border-radius: 25px;
-                        cursor: pointer;
-                        font-weight: 600;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                        🔄 Adjust Preferences
-                    </button>
-                    <button onclick="findMoreCars()" style="
-                        background: #22c55e;
-                        color: white;
-                        border: none;
-                        padding: 12px 24px;
-                        border-radius: 25px;
-                        cursor: pointer;
-                        font-weight: 600;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                        🔍 Find More Cars
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-}
-
-// Find more cars function
-function findMoreCars() {
-    console.log('🔍 Finding more cars...');
-    
-    // Reset available cars to show different ones
-    const allCars = [...carDatabase];
-    availableCars = shuffleArray(allCars).slice(0, 6); // Show 6 random cars
-    
-    // Update title
-    const titleElement = document.querySelector('.discovery-title');
-    if (titleElement) {
-        titleElement.textContent = `🎯 Found ${availableCars.length} More Amazing Cars!`;
-    }
-    
-    // Regenerate the grid
-    generateDynamicCarGrid();
-    
-    // Add some visual feedback
-    const simpleGrid = document.getElementById('simple-car-grid');
-    if (simpleGrid) {
-        simpleGrid.style.animation = 'slideInUp 0.5s ease';
-    }
-}
-
-// Shuffle array utility function
-function shuffleArray(array) {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-}
-
-// Initialize demo on page load
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Initializing Otoz.ai demo...');
     
     try {
+        // Initialize car database first
         initializeCarDatabase();
         
+        // Ensure welcome page is visible initially
         const welcomePage = document.getElementById('welcome-page');
         const demoContainer = document.getElementById('demo-container');
         
@@ -862,7 +878,10 @@ document.addEventListener('DOMContentLoaded', function() {
             demoContainer.style.display = 'none';
         }
         
+        // Populate car makes dropdown
         populateCarMakes();
+        
+        // Initialize preference status indicators
         updatePreferenceStatus();
         
         console.log('✅ Demo initialization complete!');
