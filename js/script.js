@@ -1,4 +1,4 @@
-// 🔧 FIXED OTOZ.AI MAIN JAVASCRIPT WITH IMPROVED SPARKY CHAT
+// 🔧 CORRECTED OTOZ.AI MAIN JAVASCRIPT - WITH WORKING BUTTONS + FIXED CHAT
 
 // Global state management
 let currentPhase = 'onboarding';
@@ -68,11 +68,51 @@ function initializeCarDatabase() {
     console.log(`✅ Car database initialized with ${carDatabase.length} vehicles`);
 }
 
-// Start demo function
+// 🔧 FIXED: Start demo function - MUST WORK
 function startDemo() {
-    document.getElementById('welcome-page').style.display = 'none';
-    document.getElementById('demo-container').classList.add('active');
-    showOnboarding();
+    console.log('🚀 Starting demo...');
+    
+    try {
+        const welcomePage = document.getElementById('welcome-page');
+        const demoContainer = document.getElementById('demo-container');
+        
+        if (welcomePage) {
+            welcomePage.style.display = 'none';
+        } else {
+            console.error('Welcome page element not found!');
+        }
+        
+        if (demoContainer) {
+            demoContainer.classList.add('active');
+        } else {
+            console.error('Demo container element not found!');
+        }
+        
+        showOnboarding();
+        console.log('✅ Demo started successfully');
+    } catch (error) {
+        console.error('❌ Error starting demo:', error);
+        alert('Demo failed to start. Please refresh the page and try again.');
+    }
+}
+
+// 🔧 FIXED: Show existing customer portal - MUST WORK
+function showExistingCustomerPortal() {
+    console.log('👤 Opening existing customer portal...');
+    
+    try {
+        const portal = document.getElementById('existing-customer-portal');
+        if (portal) {
+            portal.classList.add('active');
+            console.log('✅ Existing customer portal opened');
+        } else {
+            console.error('❌ Existing customer portal element not found!');
+            alert('Customer portal not available. Please refresh the page.');
+        }
+    } catch (error) {
+        console.error('❌ Error opening customer portal:', error);
+        alert('Error opening customer portal. Please try again.');
+    }
 }
 
 // Show onboarding phase
@@ -625,14 +665,17 @@ You Saved: $${discountApplied.toLocaleString()}
 Vehicle: ${selectedCar.name}`);
 }
 
-// Existing Customer Portal Functions
-function showExistingCustomerPortal() {
-    document.getElementById('existing-customer-portal').classList.add('active');
-}
-
+// 🔧 FIXED: Existing Customer Portal Functions
 function closeExistingCustomerPortal() {
-    document.getElementById('existing-customer-portal').classList.remove('active');
-    document.getElementById('customer-vehicle-id').value = '';
+    console.log('Closing existing customer portal...');
+    const portal = document.getElementById('existing-customer-portal');
+    if (portal) {
+        portal.classList.remove('active');
+    }
+    const vehicleIdInput = document.getElementById('customer-vehicle-id');
+    if (vehicleIdInput) {
+        vehicleIdInput.value = '';
+    }
 }
 
 function accessAgent(agentType) {
@@ -770,8 +813,15 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeCarDatabase();
     
     // Ensure welcome page is visible initially
-    document.getElementById('welcome-page').style.display = 'flex';
-    document.getElementById('demo-container').classList.remove('active');
+    const welcomePage = document.getElementById('welcome-page');
+    const demoContainer = document.getElementById('demo-container');
+    
+    if (welcomePage) {
+        welcomePage.style.display = 'flex';
+    }
+    if (demoContainer) {
+        demoContainer.classList.remove('active');
+    }
     
     // Populate car makes dropdown
     populateCarMakes();
@@ -827,6 +877,33 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('✅ Customer information collected successfully!\n\nIn the full app, this would generate a detailed invoice and proceed to payment processing.');
         });
     }
+    
+    // 🔧 FIXED: Test button functionality on page load
+    setTimeout(() => {
+        console.log('🔧 Testing button elements...');
+        const startBtn = document.querySelector('.start-game-btn');
+        const existingBtn = document.querySelector('.existing-customer-btn');
+        
+        if (startBtn) {
+            console.log('✅ Start button found');
+        } else {
+            console.error('❌ Start button NOT found');
+        }
+        
+        if (existingBtn) {
+            console.log('✅ Existing customer button found');
+        } else {
+            console.error('❌ Existing customer button NOT found');
+        }
+        
+        // Add click event listeners as backup
+        if (startBtn) {
+            startBtn.addEventListener('click', startDemo);
+        }
+        if (existingBtn) {
+            existingBtn.addEventListener('click', showExistingCustomerPortal);
+        }
+    }, 1000);
     
     console.log('✅ Demo initialization complete!');
 });
