@@ -891,3 +891,48 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('❌ Error initializing demo. Please check the console for details.');
     }
 });
+// 🔧 CRITICAL MISSING FUNCTIONS
+
+// Global variables
+let selectedCar = null;
+let currentPhase = 'onboarding';
+
+// 1. Fix "Start Journey" black screen
+function startDemo() {
+    console.log('🚀 Starting demo...');
+    document.getElementById('welcome-page').style.display = 'none';
+    document.getElementById('demo-container').classList.add('active');
+    showOnboarding();
+}
+
+// 2. Fix car selection 
+function selectSimpleCar(carId) {
+    console.log('🚗 Selecting car:', carId);
+    selectedCar = {
+        1: {name: '2020 Toyota Camry', price: 22000},
+        2: {name: '2019 Honda Accord', price: 20500}, 
+        3: {name: '2020 BMW 3 Series', price: 32000}
+    }[carId];
+    
+    alert(`Great choice! You selected the ${selectedCar.name} for $${selectedCar.price.toLocaleString()}. Demo will continue here!`);
+}
+
+// 3. Show onboarding phase
+function showOnboarding() {
+    document.getElementById('onboarding-phase').style.display = 'flex';
+    document.getElementById('car-discovery-phase').style.display = 'none';
+}
+
+// 4. Fix existing customer functions
+function showExistingCustomerPortal() {
+    document.getElementById('existing-customer-portal').classList.add('active');
+}
+
+function closeExistingCustomerPortal() {
+    document.getElementById('existing-customer-portal').classList.remove('active');
+}
+
+function accessAgent(agentType) {
+    alert(`Accessing ${agentType} agent status!`);
+    closeExistingCustomerPortal();
+}
