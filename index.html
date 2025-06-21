@@ -118,44 +118,12 @@
                 </div>
             </div>
 
-            <!-- 🎯 RESTORED: 3D Revolving Agent Hero Section -->
-            <div class="agent-hero-container">
-                <div class="agent-carousel">
-                    <div class="agent-hero-card" style="--rotation: 0deg;">
-                        <div class="agent-big-avatar sparky-avatar"></div>
-                        <div class="agent-hero-name">Sparky</div>
-                        <div class="agent-hero-role">Discovery & Negotiation Expert</div>
-                    </div>
-                    
-                    <div class="agent-hero-card" style="--rotation: 90deg;">
-                        <div class="agent-big-avatar inspector-avatar"></div>
-                        <div class="agent-hero-name">Inspector</div>
-                        <div class="agent-hero-role">Quality Assurance Specialist</div>
-                    </div>
-                    
-                    <div class="agent-hero-card" style="--rotation: 180deg;">
-                        <div class="agent-big-avatar penny-avatar"></div>
-                        <div class="agent-hero-name">Penny</div>
-                        <div class="agent-hero-role">Payment & Billing Wizard</div>
-                    </div>
-                    
-                    <div class="agent-hero-card" style="--rotation: 270deg;">
-                        <div class="agent-big-avatar captain-avatar"></div>
-                        <div class="agent-hero-name">Captain</div>
-                        <div class="agent-hero-role">Global Shipping Commander</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="agent-selection-hint">
-                🎮 Watch your AI team revolve • Each agent specializes in different aspects of your car buying journey
-            </div>
-
+            <!-- 🔧 FIXED: Buttons with proper event handlers -->
             <div class="game-start-controls">
-                <button class="start-game-btn" onclick="startDemo()">
+                <button class="start-game-btn" id="start-demo-btn">
                     🚀 START YOUR JOURNEY
                 </button>
-                <button class="existing-customer-btn" onclick="showExistingCustomerPortal()">
+                <button class="existing-customer-btn" id="existing-customer-btn">
                     👤 EXISTING CUSTOMER
                 </button>
             </div>
@@ -177,19 +145,19 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                             <div>
                                 <label style="display: block; font-weight: 600; color: white; margin-bottom: 8px; font-size: 14px;">Make</label>
-                                <select class="form-select" id="car-make" onchange="updateModelOptions()" style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 12px; border-radius: 12px; width: 100%;">
+                                <select class="form-select" id="car-make" style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 12px; border-radius: 12px; width: 100%;">
                                     <option value="">Any Make</option>
                                 </select>
                             </div>
                             <div>
                                 <label style="display: block; font-weight: 600; color: white; margin-bottom: 8px; font-size: 14px;">Model</label>
-                                <select class="form-select" id="car-model" onchange="updateYearOptions()" style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 12px; border-radius: 12px; width: 100%;">
+                                <select class="form-select" id="car-model" style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 12px; border-radius: 12px; width: 100%;">
                                     <option value="">Any Model</option>
                                 </select>
                             </div>
                             <div>
                                 <label style="display: block; font-weight: 600; color: white; margin-bottom: 8px; font-size: 14px;">Year</label>
-                                <select class="form-select" id="car-year" onchange="updatePreferenceStatus()" style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 12px; border-radius: 12px; width: 100%;">
+                                <select class="form-select" id="car-year" style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 12px; border-radius: 12px; width: 100%;">
                                     <option value="">Any Year</option>
                                 </select>
                             </div>
@@ -204,7 +172,7 @@
                                 <span>1,000 km</span>
                                 <span>200,000 km</span>
                             </div>
-                            <input type="range" class="range-slider" id="mileage-range" min="1000" max="200000" value="50000" step="1000" oninput="updateMileageDisplay(this.value)">
+                            <input type="range" class="range-slider" id="mileage-range" min="1000" max="200000" value="50000" step="1000">
                             <div class="range-value" id="mileage-display">50,000 km</div>
                         </div>
                     </div>
@@ -217,13 +185,14 @@
                                 <span>$1,000</span>
                                 <span>$1,000,000</span>
                             </div>
-                            <input type="range" class="range-slider" id="budget-range" min="1000" max="1000000" value="25000" step="1000" oninput="updateBudgetDisplay(this.value)">
+                            <input type="range" class="range-slider" id="budget-range" min="1000" max="1000000" value="25000" step="1000">
                             <div class="range-value" id="budget-display">$25,000</div>
                         </div>
                     </div>
                 </div>
 
-                <button class="find-cars-btn" onclick="findMatchingCars();">
+                <!-- 🔧 FIXED: Find cars button with proper event handler -->
+                <button class="find-cars-btn" id="find-cars-btn">
                     ⚡ Find My Perfect Cars
                 </button>
             </div>
@@ -240,7 +209,7 @@
                 <!-- Simple Car Grid -->
                 <div id="simple-car-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; width: 100%; max-width: 900px;">
                     <!-- Car 1: Toyota Camry -->
-                    <div class="simple-car-card" onclick="selectSimpleCar(1)">
+                    <div class="simple-car-card" data-car-id="1">
                         <div style="height: 120px; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; position: relative;">
                             🚗
                             <div style="position: absolute; top: 10px; right: 10px; background: rgba(34, 197, 94, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">📈 +3.2%</div>
@@ -263,7 +232,7 @@
                     </div>
 
                     <!-- Car 2: Honda Accord -->
-                    <div class="simple-car-card" onclick="selectSimpleCar(2)">
+                    <div class="simple-car-card" data-car-id="2">
                         <div style="height: 120px; background: linear-gradient(135deg, #22c55e, #16a34a); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; position: relative;">
                             🚙
                             <div style="position: absolute; top: 10px; right: 10px; background: rgba(34, 197, 94, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">📈 +2.8%</div>
@@ -286,7 +255,7 @@
                     </div>
 
                     <!-- Car 3: BMW 3 Series -->
-                    <div class="simple-car-card" onclick="selectSimpleCar(3)">
+                    <div class="simple-car-card" data-car-id="3">
                         <div style="height: 120px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; position: relative;">
                             🏎️
                             <div style="position: absolute; top: 10px; right: 10px; background: rgba(34, 197, 94, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">📈 +4.1%</div>
@@ -311,7 +280,7 @@
             </div>
             
             <div style="text-align: center; margin-top: 20px;">
-                <button class="btn btn-secondary" onclick="goBackToPreferences()">← Change Preferences</button>
+                <button class="btn btn-secondary" id="back-to-preferences-btn">← Change Preferences</button>
             </div>
         </div>
 
@@ -379,7 +348,7 @@
             
             <div class="main-content">
                 <div class="header">
-                    <button class="back-btn" onclick="goBack()">← Back to Home</button>
+                    <button class="back-btn" id="back-to-home-btn">← Back to Home</button>
                     <h2 id="current-agent-title">⚡ Discovery & Negotiation with Sparky</h2>
                     <div class="demo-badge">Live Demo</div>
                 </div>
@@ -414,13 +383,13 @@
                         
                         <div class="chat-input-container">
                             <input type="text" class="chat-input" id="negotiation-input" placeholder="Type your message... Try: 'That's too expensive' or 'What's your best price?'" />
-                            <button class="send-btn" onclick="sendNegotiationMessage()">➤</button>
+                            <button class="send-btn" id="send-message-btn">→</button>
                         </div>
                         
                         <div class="action-buttons">
-                            <button class="btn btn-secondary" onclick="quickReply('That seems too expensive. Can you do better?')">💰 Too Expensive</button>
-                            <button class="btn btn-secondary" onclick="quickReply('What is your absolute best price?')">🤝 Best Price?</button>
-                            <button class="btn btn-primary" onclick="acceptCurrentPrice()" id="accept-btn">✅ Accept Deal</button>
+                            <button class="btn btn-secondary" id="too-expensive-btn">💰 Too Expensive</button>
+                            <button class="btn btn-secondary" id="best-price-btn">🤝 Best Price?</button>
+                            <button class="btn btn-primary" id="accept-deal-btn">✅ Accept Deal</button>
                         </div>
                     </div>
                 </div>
@@ -450,7 +419,7 @@
                 </div>
                 
                 <div class="popup-actions">
-                    <button type="button" class="popup-btn popup-btn-secondary" onclick="closeCustomerInfoForm()">Cancel</button>
+                    <button type="button" class="popup-btn popup-btn-secondary" id="cancel-form-btn">Cancel</button>
                     <button type="submit" class="popup-btn popup-btn-primary">Generate Invoice</button>
                 </div>
             </form>
@@ -475,23 +444,23 @@
             <div style="margin: 25px 0;">
                 <h4 style="color: #1e293b; margin-bottom: 15px;">🤖 Select Your AI Agent</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <button onclick="accessAgent('sparky')" style="padding: 15px; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
+                    <button class="agent-access-btn" data-agent="sparky" style="padding: 15px; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
                         👨‍💼 Sparky<br><small>Negotiation Status</small>
                     </button>
-                    <button onclick="accessAgent('inspector')" style="padding: 15px; background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
+                    <button class="agent-access-btn" data-agent="inspector" style="padding: 15px; background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
                         👩‍🔬 Inspector<br><small>Quality Report</small>
                     </button>
-                    <button onclick="accessAgent('penny')" style="padding: 15px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
+                    <button class="agent-access-btn" data-agent="penny" style="padding: 15px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
                         👩‍💼 Penny<br><small>Payment Status</small>
                     </button>
-                    <button onclick="accessAgent('captain')" style="padding: 15px; background: linear-gradient(135deg, #059669, #047857); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
+                    <button class="agent-access-btn" data-agent="captain" style="padding: 15px; background: linear-gradient(135deg, #059669, #047857); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
                         👨‍✈️ Captain<br><small>Shipping Tracker</small>
                     </button>
                 </div>
             </div>
             
             <div class="popup-actions">
-                <button type="button" class="popup-btn popup-btn-secondary" onclick="closeExistingCustomerPortal()">Close</button>
+                <button type="button" class="popup-btn popup-btn-secondary" id="close-customer-portal-btn">Close</button>
             </div>
         </div>
     </div>
