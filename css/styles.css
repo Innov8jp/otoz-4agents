@@ -1644,3 +1644,47 @@ body {
     from { opacity: 0; }
     to { opacity: 1; }
 }
+/* ===== MOBILE FIX: Better phone display ===== */
+@media (max-width: 768px) {
+    #simple-car-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+        padding: 10px !important;
+    }
+    
+    .simple-car-card {
+        min-height: 350px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .simple-car-card h3 {
+        font-size: 1.1rem !important;
+    }
+    
+    .simple-car-card button {
+        padding: 10px 12px !important;
+        font-size: 0.8rem !important;
+        min-width: 80px !important;
+    }
+    
+    .discovery-title {
+        font-size: 1.5rem !important;
+    }
+    
+    .discovery-subtitle {
+        font-size: 1rem !important;
+    }
+    
+    .onboarding-container {
+        padding: 10px !important;
+    }
+    
+    .preference-section {
+        padding: 15px !important;
+    }
+    
+    .car-type-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+}
